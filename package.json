@@ -1,0 +1,17 @@
+{
+  "name": "type-racer",
+  "version": "0.0.1",
+  "description": "A simple type racer game",
+  "author": "Aaron",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "server",
+    "www"
+  ],
+  "scripts": {
+    "dev": "yarn workspaces foreach --all -pt run dev",
+    "build": "yarn workspaces foreach --all -pt run build"
+  },
+  "packageManager": "yarn@4.0.2"
+}
