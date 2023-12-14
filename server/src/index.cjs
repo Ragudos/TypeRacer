@@ -1,14 +1,12 @@
 const socket_io = require("socket.io");
-const http = require("http");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
 const { TypingGameServer } = require("./server.cjs");
 
-const port = process.env.PORT || "3000";
-const server = http.createServer();
-const websocket_server = new socket_io.Server(server, {
+const port = process.env.PORT || "8080";
+const websocket_server = new socket_io.Server({
 	cors: {
 		methods: ["GET", "POST"],
 	},
@@ -16,7 +14,5 @@ const websocket_server = new socket_io.Server(server, {
 
 new TypingGameServer(websocket_server);
 
-server.listen(+port, () => {
-	console.log(`Server started on *:${port}`);
-});
-websocket_server.listen(server);
+websocket_server.listen(+port);
+

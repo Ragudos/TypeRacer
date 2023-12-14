@@ -1,5 +1,4 @@
 // @ts-check
-const crypto = require("crypto");
 const { genRandomId } = require("../lib/utils.cjs");
 
 /**
@@ -13,6 +12,7 @@ const { genRandomId } = require("../lib/utils.cjs");
  *
  * @typedef {Object} User
  * @property {string} user_id
+ * @property {string} username
  * @property {string} avatar
  */
 
@@ -40,12 +40,13 @@ class InMemoryStore {
 
 	/**
 	 * @param {string} user_id
+	 * @param {string} username
 	 * @param {string} avatar
 	 */
-	addUser(user_id, avatar) {
-		this.users.set(user_id, { user_id, avatar });
+	addUser(user_id, username, avatar) {
+		this.users.set(user_id, { user_id, username, avatar });
 		console.debug(
-			`Added user ${user_id} with avatar ${avatar}. Current state: `,
+			`Added user ${user_id}. Current state: `,
 			this.users,
 		);
 	}
@@ -127,6 +128,8 @@ class InMemoryStore {
 		room.users.splice(user_idx, 1);
 		socket.leave(room_id);
 		this.server.to(room_id).emit("user_left", user);
+		
+		console.log(`User ${user_id} left room ${room_id}. Current state: `, this.rooms);
 	}
 
 	/**
@@ -134,6 +137,7 @@ class InMemoryStore {
 	 */
 	deleteRoom(room_id) {
 		this.rooms.delete(room_id);
+		console.log(`Deleted room ${room_id}. Current state: `, this.rooms);
 	}
 
 	/**
@@ -141,6 +145,7 @@ class InMemoryStore {
 	 */
 	deleteUser(user_id) {
 		this.users.delete(user_id);
+		console.log(`Deleted user ${user_id}. Current state: `, this.users);
 	}
 
 	/**
@@ -152,6 +157,7 @@ class InMemoryStore {
 		const user = this.users.get(host_id);
 
 		if (!user) {
+			console.log("User does not exist despite trying to create a room.");
 			return;
 		}
 

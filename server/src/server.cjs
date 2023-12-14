@@ -14,6 +14,7 @@ const { genRandomId } = require("./lib/utils.cjs");
  * @typedef {Object} ClientToServer
  * @property {() => void} create_room
  * @property {(room_id: string) => void} join_room
+ * @property {(room_id: string) => void} leave_room
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -34,33 +35,48 @@ class TypingGameServer {
 	 * @param {Socket} socket
 	 */
 	onConnection(socket) {
-		this.socket = socket;
+		this.__socket = socket;
 
 		socket.on("error", this.onError.bind(this));
 		socket.on("create_room", this.onCreateRoom.bind(this));
 		socket.on("join_room", this.onJoinRoom.bind(this));
+		socket.on("leave_room", this.onLeaveRoom.bind(this));
 		socket.on("disconnecting", this.onDisconnecting.bind(this));
 	}
 
 	/**
 	 * @param {string} room_id
 	 */
-	onJoinRoom(room_id) {
-		if (!this.socket) {
+	onLeaveRoom(room_id) {
+		if (!this.__socket) {
 			console.error(
 				"This is an event listener callback. It should not be called directly.",
 			);
 			return;
 		}
 
-		this.store.joinRoom(this.socket, this.socket.user_id, room_id);
+		this.store.leaveRoom(this.__socket, this.__socket.user_id, room_id);
+	}
+
+	/**
+	 * @param {string} room_id
+	 */
+	onJoinRoom(room_id) {
+		if (!this.__socket) {
+			console.error(
+				"This is an event listener callback. It should not be called directly.",
+			);
+			return;
+		}
+
+		this.store.joinRoom(this.__socket, this.__socket.user_id, room_id);
 	}
 
 	/**
 	 * @param {string} host_id
 	 */
 	onCreateRoom(host_id) {
-		if (!this.socket) {
+		if (!this.__socket) {
 			console.error(
 				"This is an event listener callback. It should not be called directly.",
 			);
@@ -68,14 +84,18 @@ class TypingGameServer {
 		}
 
 		this.store
-			.createRoom(this.socket, host_id)
+			.createRoom(this.__socket, host_id)
 			.then((room) => {
-				if (!this.socket) {
+				if (!this.__socket) {
+					return;
+				}
+
+				if (!room) {
 					return;
 				}
 
 				console.log(
-					`User ${this.socket.user_id} with a username of ${this.socket.username} created a room with an id of ${room?.room_id}`,
+					`User ${this.__socket.user_id} with a username of ${this.__socket.username} created a room with an id of ${room.room_id}`,
 				);
 			})
 			.catch(console.error);
@@ -85,7 +105,7 @@ class TypingGameServer {
 	 * @param {string} reason
 	 */
 	onDisconnecting(reason) {
-		if (!this.socket) {
+		if (!this.__socket) {
 			console.error(
 				"This is an event listener callback. It should not be called directly.",
 			);
@@ -93,19 +113,21 @@ class TypingGameServer {
 		}
 
 		console.log(
-			`User ${this.socket.user_id} with a username of ${this.socket.username} is disconnecting: ${reason}`,
+			`User ${this.__socket.user_id} with a username of ${this.__socket.username} is disconnecting: ${reason}`,
 		);
 
-		for (const room_id of this.socket.rooms.values()) {
-			this.store.leaveRoom(this.socket, this.socket.user_id, room_id);
+		for (const room_id of this.__socket.rooms.values()) {
+			this.store.leaveRoom(this.__socket, this.__socket.user_id, room_id);
 		}
+
+		this.store.deleteUser(this.__socket.user_id);
 	}
 
 	/**
 	 * @param {Error} error
 	 */
 	onError(error) {
-		if (!this.socket) {
+		if (!this.__socket) {
 			console.error(
 				"This is an event listener callback. It should not be called directly.",
 			);
@@ -113,7 +135,7 @@ class TypingGameServer {
 		}
 
 		console.error(error);
-		this.socket.emit("error", error);
+		this.__socket.emit("error", error);
 	}
 
 	/**
@@ -124,15 +146,13 @@ class TypingGameServer {
 	middleware = async (socket, next) => {
 		const auth_handshake = socket.handshake.auth;
 
-		console.log(socket.handshake.query);
-
 		try {
 			const user_id = await genRandomId();
 
 			socket.avatar = auth_handshake.avatar;
 			socket.username = auth_handshake.username;
 			socket.user_id = user_id;
-			this.store.addUser(socket.user_id, socket.avatar);
+			this.store.addUser(socket.user_id, socket.username, socket.avatar);
 			next();
 		} catch (err) {
 			next(err);

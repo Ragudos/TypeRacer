@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon src/index.cjs",
-	"format": "prettier -w src"
+    "format": "prettier -w src"
   },
   "dependencies": {
     "dotenv": "^16.3.1",

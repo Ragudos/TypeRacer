@@ -5,7 +5,7 @@ const crypto = require("node:crypto");
  */
 function genRandomId() {
 	return new Promise((resolve, reject) => {
-		crypto.randomBytes(8, (err, buf) => {
+		crypto.randomBytes(3, (err, buf) => {
 			if (err) {
 				reject(err);
 			}
