@@ -7,6 +7,7 @@ import "./styles/globals.css";
 import { RoomIdContextProvider } from "./contexts/room-id.jsx";
 import { UserInfoContextProvider } from "./contexts/user-info.jsx";
 import { SocketConnectionContextProvider } from "./contexts/socket-connection-context.jsx";
+import ErrorCatcher from "./error-catcher.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -20,6 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 						}
 					}
 				/>
+				<ErrorCatcher />
 				<App />
 			</UserInfoContextProvider>
 		</RoomIdContextProvider>

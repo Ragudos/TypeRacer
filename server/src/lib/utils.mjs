@@ -1,4 +1,4 @@
-const crypto = require("node:crypto");
+import crypto from "node:crypto";
 
 /**
  *@returns {Promise<string>}
@@ -14,4 +14,4 @@ function genRandomId() {
 	});
 }
 
-module.exports = { genRandomId };
+export { genRandomId };

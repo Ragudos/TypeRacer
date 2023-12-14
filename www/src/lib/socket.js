@@ -2,8 +2,8 @@ import socket_io from "socket.io-client";
 
 /**
  * @global
- * @typedef {import("../../../server/src/server.cjs").ClientToServer} ClientToServer
- * @typedef {import("../../../server/src/server.cjs").ServerToClient} ServerToClient
+ * @typedef {import("../../../server/src/server.mjs").ClientToServer} ClientToServer
+ * @typedef {import("../../../server/src/server.mjs").ServerToClient} ServerToClient
  */
 
 /**

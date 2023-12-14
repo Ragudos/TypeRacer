@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "nodemon src/index.cjs",
+    "dev": "nodemon src/index.mjs",
     "format": "prettier -w src"
   },
   "dependencies": {

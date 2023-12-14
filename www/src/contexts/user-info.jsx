@@ -1,5 +1,6 @@
 // @ts-check
 import React from "react";
+import { socket } from "../lib/socket";
 
 /**
  * @typedef {Object} UserInfoContextType
@@ -8,7 +9,6 @@ import React from "react";
  * @property {string} userId
  * @property {React.Dispatch<React.SetStateAction<string>>} setUsername
  * @property {React.Dispatch<React.SetStateAction<string>>} setAvatar
- * @property {React.Dispatch<React.SetStateAction<string>>} setUserId
  */
 
 /**
@@ -20,7 +20,6 @@ export const UserInfoContext = React.createContext({
 	userId: "",
 	setUsername: (_username) => {},
 	setAvatar: (_avatar) => {},
-	setUserId: (_userId) => {},
 });
 
 /**
@@ -31,6 +30,13 @@ export const UserInfoContextProvider = (props) => {
 	const [avatar, setAvatar] = React.useState("");
 	const [userId, setUserId] = React.useState("");
 
+	React.useEffect(() => {
+		socket.on("send_user_id", setUserId);
+		return () => {
+			socket.off("send_user_id", setUserId);
+		};
+	}, []);
+
 	return (
 		<UserInfoContext.Provider
 			value={{
@@ -39,7 +45,6 @@ export const UserInfoContextProvider = (props) => {
 				avatar,
 				setAvatar,
 				userId,
-				setUserId,
 			}}
 		>
 			{props.children}

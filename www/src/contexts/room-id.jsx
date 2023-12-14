@@ -1,6 +1,7 @@
 // @ts-check
 
 import React from "react";
+import { socket } from "../lib/socket";
 
 /**
  * @type {React.Context<string>}
@@ -19,6 +20,12 @@ export const RoomIdContextProvider = (props) => {
 		if (roomId) {
 			setRoomId(roomId);
 		}
+		socket.on("room_created", setRoomId);
+		socket.on("joined_room", setRoomId);
+		return () => {
+			socket.off("room_created", setRoomId);
+			socket.off("joined_room", setRoomId);
+		};
 	}, []);
 
 	return (
