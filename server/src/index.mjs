@@ -4,7 +4,6 @@ import { TypingGameServer } from "./server.mjs";
 
 dotenv.config();
 
-
 const port = process.env.PORT || "8080";
 const websocket_server = new Server({
 	cors: {

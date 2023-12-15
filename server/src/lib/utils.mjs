@@ -14,4 +14,15 @@ function genRandomId() {
 	});
 }
 
-export { genRandomId };
+/**
+ * @param {number} duration Duration to wait in milliseconds
+ */
+function sleep(duration) {
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			resolve();
+		}, duration);
+	});
+}
+
+export { genRandomId, sleep };

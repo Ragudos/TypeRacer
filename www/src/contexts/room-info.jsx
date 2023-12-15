@@ -7,13 +7,18 @@ import { toast } from "react-hot-toast";
  * @typedef {import("../../../server/src/adapters/in-memory.mjs").User} UserInfo
  * @typedef {import("../../../server/src/adapters/in-memory.mjs").Room} RoomInfo
  *
- * @typedef {RoomInfo | undefined} RoomInfoContextType
+ * @typedef {Object} RoomInfoContextType
+ * @property {RoomInfo | undefined} roomInfo
+ * @property {React.Dispatch<React.SetStateAction<RoomInfo | undefined>>} setRoomInfo
  */
 
 /**
  * @type {React.Context<RoomInfoContextType>}
  */
-export const RoomInfoContext = React.createContext(/** @type {RoomInfoContextType | undefined} */(undefined));
+export const RoomInfoContext = React.createContext(/** @type {RoomInfoContextType} */({
+	roomInfo: undefined,
+	setRoomInfo: () => {}
+}));
 
 /**
  * @param {{ children: React.ReactNode }} props
@@ -34,8 +39,10 @@ export const RoomInfoContextProvider = (props) => {
 					return undefined;
 				}
 
-				prevRoomInfo.users.push(userInfo);
-				return prevRoomInfo;
+				return {
+					...prevRoomInfo,
+					users: [...prevRoomInfo.users, userInfo]
+				};
 			});
 			
 			toast(`${userInfo.username} joined the room.`);
@@ -53,9 +60,11 @@ export const RoomInfoContextProvider = (props) => {
 					return undefined;
 				}
 
-				prevRoomInfo.users.splice(prevRoomInfo.users.findIndex((user) => user.user_id === userWhoLeft.user_id), 1);
-				prevRoomInfo.host_id = newHostUserId;
-				return prevRoomInfo;
+				return {
+					...prevRoomInfo,
+					users: prevRoomInfo.users.filter((user) => user.user_id !== userWhoLeft.user_id),
+					host_id: newHostUserId
+				};
 			});
 
 			toast(`${userWhoLeft.username} left the room.`);
@@ -63,52 +72,17 @@ export const RoomInfoContextProvider = (props) => {
 		[]
 	);
 
-	/**
-	 * @type {(roomId: string) => void}
-	 */
-	const onRoomConnection = React.useCallback(
-		(roomId) => {
-			if (roomInfo) {
-				console.log("Requesting room info more than once.");
-				return;
-			}
-
-			if (!roomId) {
-				return;
-			}
-
-			socket.emit("request_room_info", roomId);
-		},
-		[roomInfo]
-	);
-
-	/**
-	 * @type {(roomInfo: RoomInfo) => void}
-	 */
-	const receiveRoomInfo = React.useCallback(
-		(roomInfo) => {
-			setRoomInfo(roomInfo);	
-		},
-		[]
-	);
-
 	React.useEffect(() => {
-		socket.on("joined_room", onRoomConnection);
-		socket.on("room_created", onRoomConnection);
-		socket.on("send_room_info", receiveRoomInfo);
 		socket.on("user_joined", onUserJoined);
 		socket.on("user_left", onUserLeft);
 		return () => {
-			socket.off("joined_room", onRoomConnection);
-			socket.off("room_created", onRoomConnection);
-			socket.off("send_room_info", receiveRoomInfo);
 			socket.off("user_joined", onUserJoined);
 			socket.off("user_left", onUserLeft);
 		};
-	}, [receiveRoomInfo, onRoomConnection, onUserJoined, onUserLeft]);
+	}, [onUserJoined, onUserLeft]);
 
 	return (
-		<RoomInfoContext.Provider value={roomInfo}>
+		<RoomInfoContext.Provider value={{ roomInfo, setRoomInfo }}>
 			{props.children}
 		</RoomInfoContext.Provider>
 	);

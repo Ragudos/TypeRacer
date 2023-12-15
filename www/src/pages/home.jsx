@@ -4,11 +4,13 @@ import useSocketConnection from "../hooks/useSocketConnection";
 import useRoomId from "../hooks/useRoomId";
 import { socket } from "../lib/socket";
 import { toast } from "react-hot-toast";
+import useRoomInfo from "../hooks/useRoomInfo";
 
 export default function HomePage() {
 	const { setIsConnected } = useSocketConnection();
 	const { setUsername, username, avatar, setAvatar } = useUserInfo();
-	const roomId = useRoomId();
+	const { roomId, setRoomId } = useRoomId();
+	const { setRoomInfo } = useRoomInfo();
 	const [transition, startTransition] = React.useTransition();
 	
 	/**
@@ -28,17 +30,37 @@ export default function HomePage() {
 	}
 
 	function handleConnectOnPlay() {
-		console.log("Successfully connected to server. Joing room...");
-		socket.emit("join_room", roomId);
+		socket.emit("join_room", roomId, (status, data, message) => {
+			if (status === 500) {
+				rejectPromise.current?.(message);
+				return;
+			}
+
+			console.log("Successfully connected to server. Joing room");
+
+			setRoomInfo(data);
+			setRoomId(data.room_id);
+
+			resolvePromise.current?.();
+		});
 		socket.off("connect_error", handleConnectError);
-		resolvePromise.current?.();
 	}
 
 	function handleConnectOnRoomCreation() {
-		console.log("Successfully connected to server. Creating room...");
-		socket.emit("create_room");
+		socket.emit("create_room", (status, data, message) => {
+			if (status === 500) {
+				rejectPromise.current?.(message);
+				return;
+			}
+
+			console.log("Successfully connected to server. Creating room.");
+
+			setRoomInfo(data);
+			setRoomId(data.room_id);
+
+			resolvePromise.current?.();
+		});
 		socket.off("connect_error", handleConnectError);
-		resolvePromise.current?.();
 	}
 
 	function handlePlay() {
@@ -48,6 +70,8 @@ export default function HomePage() {
 		}
 
 		startTransition(() => {
+			const toastId = toast.loading("Connecting to server...");
+
 			new Promise((resolve, reject) => {
 				resolvePromise.current = resolve;
 				rejectPromise.current = reject;
@@ -63,9 +87,11 @@ export default function HomePage() {
 				setIsConnected(true);
 			}).catch((err) => {
 				toast.error(err instanceof Error ? err.message : err);
+				socket.disconnect();
 			}).finally(() => {
 				resolvePromise.current = undefined;
 				rejectPromise.current = undefined;
+				toast.dismiss(toastId);
 			});
 		});
 	}
@@ -77,6 +103,8 @@ export default function HomePage() {
 		}
 
 		startTransition(() => {
+			const toastId = toast.loading("Connecting to server...");
+
 			new Promise((resolve, reject) => {
 				resolvePromise.current = resolve;
 				rejectPromise.current = reject;
@@ -92,9 +120,11 @@ export default function HomePage() {
 				setIsConnected(true);
 			}).catch((err) => {
 				toast.error(err instanceof Error ? err.message : err);
+				socket.disconnect();
 			}).finally(() => {
 				resolvePromise.current = undefined;
 				rejectPromise.current = undefined;
+				toast.dismiss(toastId);
 			});
 		});
 	}
@@ -103,7 +133,7 @@ export default function HomePage() {
 		<React.Fragment>
 			<div className="card">
 				<div className="card-body">
-					<div className="form-group">
+					<div className="form-group" style={{ width: "100%" }}>
 						<label htmlFor="username">Username</label>
 						<input
 							type="text"
@@ -117,22 +147,26 @@ export default function HomePage() {
 							disabled={transition}
 						/>
 					</div>
-					<button
-						type="button"
-						className="btn btn-primary"
-						onClick={handlePlay}
-						disabled={transition}
-					>
-						Play
-					</button>
-					<button
-						type="button"
-						className="btn btn-secondary"
-						onClick={handleCreateRoom}
-						disabled={transition}
-					>
-						Create Private Room
-					</button>
+					<div style={{ width: "100%" }}>
+						<button
+							type="button"
+							className="btn btn-primary"
+							onClick={handlePlay}
+							disabled={transition}
+							style={{ width: "100%", marginBottom: "0.5rem" }}
+						>
+							Play
+						</button>
+						<button
+							type="button"
+							className="btn btn-secondary"
+							onClick={handleCreateRoom}
+							disabled={transition}
+							style={{ width: "100%" }}
+						>
+							Create Private Room
+						</button>
+					</div>
 				</div>
 			</div>
 		</React.Fragment>

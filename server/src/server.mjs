@@ -5,19 +5,37 @@ import { SOCKET_ERRORS, SOCKET_ROOM_TYPES } from "./enums.mjs";
 import { genRandomId } from "./lib/utils.mjs";
 
 /**
+ * @template T
+ * @callback CallbackAcknowledgement
+ * @param {(500 | 200)} status - Status of the acknowledgement.
+ * @param {T | undefined} data - Data to be passed to the client.
+ * @param {string} message - Message to be passed to the client.
+ */
+
+/**
+ * @typedef {import("./enums.mjs").SocketError} SocketError
+ * @typedef {import("./adapters/in-memory.mjs").Room} Room
+ * @typedef {import("./adapters/in-memory.mjs").User} User
+ */
+
+/**
  * @global
+ *
+ * @typedef {CallbackAcknowledgement<Room | undefined>} RoomCreationAcknowledgement
+ * @typedef {CallbackAcknowledgement<Room | undefined>} RoomJoinAcknowledgement
+ *
  * @typedef {Object} ServerToClient
- * @property {(error: { name: import("./enums.mjs").SocketError; message: string; }) => void} error
- * @property {(user: import("./adapters/in-memory.mjs").User) => void} user_joined
- * @property {(user: import("./adapters/in-memory.mjs").User, new_host_id: string) => void} user_left
+ * @property {(error: { name: SocketError; message: string; }) => void} error
+ * @property {(user: User) => void} user_joined
+ * @property {(user: User, new_host_id: string) => void} user_left
  * @property {(room_id: string) => void} room_created
  * @property {(room_id: string) => void} joined_room
  * @property {(user_id: string) => void} send_user_id
- * @property {(room_info: import("./adapters/in-memory.mjs").Room) => void} send_room_info
+ * @property {(room_info: Room) => void} send_room_info
  *
  * @typedef {Object} ClientToServer
- * @property {() => void} create_room
- * @property {(room_id: string) => void} join_room
+ * @property {(cb: RoomCreationAcknowledgement) => void} create_room
+ * @property {(room_id: string, cb: RoomJoinAcknowledgement)=> void} join_room
  * @property {(room_id: string) => void} leave_room
  * @property {(room_id: string) => void} request_room_info
  * @property {(room_id: string) => void} request_list_of_players_in_room
@@ -46,11 +64,11 @@ class TypingGameServer {
 		socket.on("error", (error) => {
 			this.onError(socket, error);
 		});
-		socket.on("create_room", () => {
-			this.onCreateRoom(socket, socket.user_id);
+		socket.on("create_room", (cb) => {
+			this.onCreateRoom(socket, socket.user_id, cb);
 		});
-		socket.on("join_room", (room_id) => {
-			this.onJoinRoom(socket, room_id);
+		socket.on("join_room", (room_id, cb) => {
+			this.onJoinRoom(socket, room_id, cb);
 		});
 		socket.on("leave_room", (room_id) => {
 			this.onLeaveRoom(socket, room_id);
@@ -92,16 +110,18 @@ class TypingGameServer {
 	/**
 	 * @param {Socket} socket
 	 * @param {string} room_id
+	 * @param {CallbackAcknowledgement<Room | undefined>} cb
 	 */
-	onJoinRoom(socket, room_id) {
-		this.store.joinRoom(socket, socket.user_id, room_id);
+	onJoinRoom(socket, room_id, cb) {
+		this.store.joinRoom(socket, socket.user_id, room_id, cb);
 	}
 
 	/**
 	 * @param {Socket} socket
 	 * @param {string} host_id
+	 * @param {RoomCreationAcknowledgement} cb
 	 */
-	onCreateRoom(socket, host_id) {
+	onCreateRoom(socket, host_id, cb) {
 		this.store
 			.createRoom(socket, host_id, SOCKET_ROOM_TYPES.PRIVATE)
 			.then((room) => {
@@ -112,8 +132,13 @@ class TypingGameServer {
 				console.log(
 					`User ${socket.user_id} with a username of ${socket.username} created a room with an id of ${room.room_id}`,
 				);
+
+				cb(200, room, "Successfully created room.");
 			})
-			.catch(console.error);
+			.catch((err) => {
+				console.error(err);
+				cb(500, undefined, err);
+			});
 	}
 
 	/**
@@ -138,7 +163,10 @@ class TypingGameServer {
 	 */
 	onError(socket, error) {
 		console.error(error);
-		socket.emit("error", { name: SOCKET_ERRORS.ERROR, message: error.message });
+		socket.emit("error", {
+			name: SOCKET_ERRORS.ERROR,
+			message: error.message,
+		});
 	}
 
 	/**
@@ -164,4 +192,3 @@ class TypingGameServer {
 }
 
 export { TypingGameServer };
-

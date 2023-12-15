@@ -1,0 +1,241 @@
+:root {
+	--background: 72 50% 96%;
+	--foreground: 60 40% 2%;
+	--card: 72 50% 96%;
+	--card-foreground: 60 40% 2%;
+	--popover: 72 50% 96%;
+	--popover-foreground: 60 40% 2%;
+	--primary: 71 53% 55%;
+	--primary-foreground: 60 40% 2%;
+	--secondary: 71 58% 72%;
+	--secondary-foreground: 60 40% 2%;
+	--muted: 73 51% 20%;
+	--muted-foreground: 60 40% 70%;
+	--accent: 72 64% 63%;
+	--accent-foreground: 60 40% 2%;
+	--destructive: 0 85% 60%;
+	--destructive-foreground: 60 40% 2%;
+	--border: 73 51% 20%;
+	--input: 73 51% 20%;
+	--ring: 72 64% 40%;
+	--ring-offset: var(--background);
+	--radius: 0.5rem;
+	--duration: 75ms;
+	--max-content-width: 1400px;
+	--padding-inline: 1rem;
+}
+   
+.dark {
+	--background: 72 50% 4%;
+	--foreground: 60 40% 98%;
+	--card: 72 50% 4%;
+	--card-foreground: 60 40% 98%;
+	--popover: 72 50% 4%;
+	--popover-foreground: 60 40% 98%;
+	--primary: 71 53% 45%;
+	--primary-foreground: 72 50% 4%;
+	--secondary: 71 58% 28%;
+	--secondary-foreground: 60 40% 98%;
+	--muted: 73 50% 80%;
+	--muted-foreground: 60 40% 98%;
+	--accent: 72 64% 37%;
+	--accent-foreground: 72 50% 4%;
+	--destructive: 0 62% 30%;
+	--destructive-foreground: 60 41% 10%;
+	--border: 72 50% 60%;
+	--input: 73 50% 80%;
+	--ring: 72 64% 60%;
+	--ring-offset: var(--background);
+}
+
+*,
+::before,
+::after {
+	box-sizing: inherit;
+
+	border-color: hsl(var(--border) / var(--_border-opacity, 1));
+	outline-color: hsl(var(--ring) / var(--_outline-opacity, 1));
+}
+
+html {
+	box-sizing: border-box;
+}
+
+html:focus {
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+body {
+	min-height: 100dvh;
+
+	font-family: "Inter", system-ui, sans-serif;
+	font-size: 1rem;
+	font-synthesis: none;
+	-webkit-text-size-adjust: 100%;
+	text-rendering: optimizeSpeed;
+	line-height: 1.6;
+
+	background-color: hsl(var(--background));
+	color: hsl(var(--foreground));
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+input,
+textarea {
+	--_border-opacity: 0.25;
+	transition-property: border-color;
+	will-change: border-color;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+	--_border-opacity: 1;
+}
+
+button,
+input[type=submit] {
+	border: none;
+	background-color: transparent;
+	cursor: pointer;
+}
+
+button,
+input,
+textarea,
+a {
+	padding: 0.5rem 1rem;
+	border-radius: calc(var(--radius) - 4px);
+
+	outline: transparent;
+
+	transition-duration: var(--duration);
+}
+
+button,
+input[type=submit],
+a {
+	transition-property: background-color, color, box-shadow;
+	will-change: background-color, color, box-shadow;
+	box-shadow: var(--_box-shadow, 0px 0px 0px 0px),
+		var(--_ring, 0px 0px 0px 0px) hsl(var(--ring)),
+		var(--_ring-offset, 0px 0px 0px 0px) hsl(var(--ring-offset));
+
+	min-width: 7.5ch;
+	min-height: 5ch;
+	font-size: 0.875rem;
+}
+
+button:focus-visible,
+input[type=submit]:focus-visible,
+a:focus-visible {
+	--_ring: 0px 0px 0px 3px;
+	--_ring-offset: 0px 0px 0px 2px;
+}
+
+.btn-primary {
+	background-color: hsl(var(--primary) / var(--_bg-opacity, 1));
+	color: hsl(var(--primary-foreground));
+}
+
+.btn-primary:hover {
+	--_bg-opacity: 0.8;
+}
+
+.btn-secondary {
+	background-color: hsl(var(--secondary) / var(--_bg-opacity, 1));
+	color: hsl(var(--secondary-foreground));
+}
+
+.btn-secondary:hover {
+	--_bg-opacity: 0.8;
+}
+
+.btn-accent {
+	background-color: hsl(var(--accent) / var(--_bg-opacity, 1));
+	color: hsl(var(--accent-foreground));
+}
+
+.btn-accent:hover {
+	--_bg-opacity: 0.8;
+}
+
+#root {
+	min-height: 100dvh;
+	display: grid;
+	place-items: center;
+}
+
+main {
+	padding-block: 3rem;
+}
+
+h1 {
+	hyphens: auto;
+	text-align: center;
+}
+
+.container {
+	max-width: var(--max-content-width);
+	padding-inline: var(--padding-inline);
+	margin-inline: auto;
+}
+
+.card {
+	margin-inline: auto;
+	width: min(100% ,calc(var(--max-content-width) / 4));
+	padding: 2rem;
+	border-radius: var(--radius);
+
+	border: 1px solid;
+}
+
+.card-body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	gap: 1rem;
+}
+
+input {
+	width: 100%;
+	margin-top: 0.25rem;
+}
+
+.loader-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rotating-loader {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	border: 0.25rem solid transparent;
+	border-top-color: hsl(var(--border));
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+

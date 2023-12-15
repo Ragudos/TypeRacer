@@ -4,9 +4,18 @@ import React from "react";
 import { socket } from "../lib/socket";
 
 /**
- * @type {React.Context<string>}
+ * @typedef {Object} RoomIdContext
+ * @property {string} roomId
+ * @property {React.Dispatch<React.SetStateAction<string>>} setRoomId
  */
-export const RoomIdContext = React.createContext("");
+
+/**
+ * @type {React.Context<RoomIdContext>}
+ */
+export const RoomIdContext = React.createContext({
+	roomId: "",
+	setRoomId: () => {}
+});
 
 /**
  * @param {{ children: React.ReactNode }} props
@@ -20,16 +29,10 @@ export const RoomIdContextProvider = (props) => {
 		if (roomId) {
 			setRoomId(roomId);
 		}
-		socket.on("room_created", setRoomId);
-		socket.on("joined_room", setRoomId);
-		return () => {
-			socket.off("room_created", setRoomId);
-			socket.off("joined_room", setRoomId);
-		};
 	}, []);
 
 	return (
-		<RoomIdContext.Provider value={roomId}>
+		<RoomIdContext.Provider value={{ roomId, setRoomId }}>
 			{props.children}
 		</RoomIdContext.Provider>
 	);

@@ -17,7 +17,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 				<Toaster
 					toastOptions={
 						{
-							position: "top-right"
+							position: "top-right",
+							style: {
+								backgroundColor: "var(--background)",
+								color: "var(--foreground)",
+								boxShadow: "0 4px 12px hsl(var(--foreground) / 0.075)"
+							},
 						}
 					}
 				/>

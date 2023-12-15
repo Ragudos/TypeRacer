@@ -2,9 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+	<meta name="title" content="TypeRacer" />
+	<meta name="description" content="Test your typing skills with friends or by yourself and see how fast you can type." />
+    <title>TypeRacer</title>
+	<script>
+		const storedTheme = localStorage.getItem('theme');
+		const html = document.documentElement;
+
+		html.classList.remove("light", "dark");
+
+		if (storedTheme != "dark" || storedTheme != "light") {
+			const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+			if (mediaQuery.matches) {
+				html.style.colorScheme = "dark";
+				html.classList.add("dark");
+			} else {
+				html.style.colorScheme = "light";
+				html.classList.add("light");
+			}
+		} else {
+			html.style.colorScheme = storedTheme;
+			html.classList.add(storedTheme);
+		}
+	</script>
   </head>
   <body>
     <div id="root"></div>
