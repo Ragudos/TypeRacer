@@ -3,6 +3,7 @@ import React from "react";
 import { socket } from "../lib/socket";
 import useRoomId from "../hooks/useRoomId";
 import useUserInfo from "../hooks/useUserInfo";
+import useRoomInfo from "../hooks/useRoomInfo";
 
 /**
  * @typedef {import("../../../server/src/adapters/in-memory.mjs").Chat} Chat
@@ -17,6 +18,7 @@ const Chat = React.memo(function () {
 
 	const { roomId } = useRoomId();
 	const userInfo = useUserInfo();
+	const { roomInfo } = useRoomInfo();
 
 	const canSendNewMessage = React.useRef(true);
 	/**
@@ -159,13 +161,18 @@ const Chat = React.memo(function () {
 			<Content align="end" className="chat-box">
 				<ul>
 					{chats.length === 0 && <li>No messages yet.</li>}
-					{chats.map((chat, idx) => (
-						<li ref={idx === chats.length - 1 ? scrollToRef : undefined} key={chat.user_id + chat.created_at}>
-							{chat.username} {chat.user_id === userInfo.userId && (
-								<small>&#40;you&#41;</small>
-							)}: <p>{chat.message}</p>
-						</li>
-					))}
+					{chats.map((chat, idx) => {
+						const didUserLeave = roomInfo?.users.findIndex((user) => user.user_id === chat.user_id) === -1;
+						const date = new Date(chat.created_at).toLocaleDateString("en-us", { hour: "numeric", minute: "2-digit" });
+
+						return (
+							<li style={ didUserLeave ? { opacity: "0.5" } : undefined } ref={idx === chats.length - 1 ? scrollToRef : undefined} key={chat.user_id + chat.created_at}>
+								{chat.username} {chat.user_id === userInfo.userId && (
+									<small>&#40;you&#41;</small>
+								)}: <p>{chat.message}</p> <time dateTime={date} style={{ fontSize: "0.75rem" }}>{date}</time> { didUserLeave && <small>&#40;left&#41;</small> }
+							</li>
+						);
+					})}
 				</ul>
 				<form action=" " method="POST" onSubmit={handleSubmit}>
 					<label htmlFor="message" className="sr-only">
