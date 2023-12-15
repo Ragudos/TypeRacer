@@ -14,7 +14,7 @@ import { socket } from "../lib/socket";
  */
 export const RoomIdContext = React.createContext({
 	roomId: "",
-	setRoomId: () => {}
+	setRoomId: () => {},
 });
 
 /**
@@ -37,4 +37,3 @@ export const RoomIdContextProvider = (props) => {
 		</RoomIdContext.Provider>
 	);
 };
-

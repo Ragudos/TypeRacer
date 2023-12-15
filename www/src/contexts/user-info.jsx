@@ -30,12 +30,24 @@ export const UserInfoContextProvider = (props) => {
 	const [avatar, setAvatar] = React.useState("");
 	const [userId, setUserId] = React.useState("");
 
+	/**
+	 * @type {(userInfo: import("./room-info").UserInfo) => void}
+	 */
+	const receiveUserInfo = React.useCallback(
+		(userInfo) => {
+			setUsername(userInfo.username);
+			setAvatar(userInfo.avatar);
+			setUserId(userInfo.user_id);
+		},
+		[setUsername, setAvatar],
+	);
+
 	React.useEffect(() => {
-		socket.on("send_user_id", setUserId);
+		socket.on("send_user_info", receiveUserInfo);
 		return () => {
-			socket.off("send_user_id", setUserId);
+			socket.off("send_user_info", receiveUserInfo);
 		};
-	}, []);
+	}, [receiveUserInfo]);
 
 	return (
 		<UserInfoContext.Provider
@@ -51,4 +63,3 @@ export const UserInfoContextProvider = (props) => {
 		</UserInfoContext.Provider>
 	);
 };
-

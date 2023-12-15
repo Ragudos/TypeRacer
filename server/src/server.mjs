@@ -2,20 +2,21 @@
 
 import { InMemoryStore } from "./adapters/in-memory.mjs";
 import { SOCKET_ERRORS, SOCKET_ROOM_TYPES } from "./enums.mjs";
-import { genRandomId } from "./lib/utils.mjs";
+import { genRandomId, sleep } from "./lib/utils.mjs";
 
 /**
  * @template T
  * @callback CallbackAcknowledgement
  * @param {(500 | 200)} status - Status of the acknowledgement.
  * @param {T | undefined} data - Data to be passed to the client.
- * @param {string} message - Message to be passed to the client.
+ * @param {string} [message] - Message to be passed to the client.
  */
 
 /**
  * @typedef {import("./enums.mjs").SocketError} SocketError
  * @typedef {import("./adapters/in-memory.mjs").Room} Room
  * @typedef {import("./adapters/in-memory.mjs").User} User
+ * @typedef {import("./adapters/in-memory.mjs").Chat} Chat
  */
 
 /**
@@ -30,15 +31,17 @@ import { genRandomId } from "./lib/utils.mjs";
  * @property {(user: User, new_host_id: string) => void} user_left
  * @property {(room_id: string) => void} room_created
  * @property {(room_id: string) => void} joined_room
- * @property {(user_id: string) => void} send_user_id
+ * @property {(user: User) => void} send_user_info
  * @property {(room_info: Room) => void} send_room_info
+ * @property {(chat: Chat) => void} user_sent_message
  *
  * @typedef {Object} ClientToServer
  * @property {(cb: RoomCreationAcknowledgement) => void} create_room
  * @property {(room_id: string, cb: RoomJoinAcknowledgement)=> void} join_room
  * @property {(room_id: string) => void} leave_room
  * @property {(room_id: string) => void} request_room_info
- * @property {(room_id: string) => void} request_list_of_players_in_room
+ * @property {(room_id: string, cb: CallbackAcknowledgement<import("./adapters/in-memory.mjs").Chats | undefined>) => void} request_chats_in_room
+ * @property {(room_id: string, user_id: string, message: string, cb: CallbackAcknowledgement<Chat>) => void} send_message
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -59,7 +62,11 @@ class TypingGameServer {
 	 * @param {Socket} socket
 	 */
 	onConnection(socket) {
-		socket.emit("send_user_id", socket.user_id);
+		socket.emit("send_user_info", {
+			user_id: socket.user_id,
+			username: socket.username,
+			avatar: socket.avatar,
+		});
 
 		socket.on("error", (error) => {
 			this.onError(socket, error);
@@ -79,6 +86,50 @@ class TypingGameServer {
 		socket.on("request_room_info", (room_id) => {
 			this.onRequestRoomInfo(socket, room_id);
 		});
+		socket.on("request_chats_in_room", this.onRequestChatsInRoom.bind(this));
+		socket.on("send_message", (room_id, user_id, message, cb) => {
+			this.onSendMessage(socket, room_id, user_id, message, cb);
+		});
+	}
+
+	/**
+	 * @param {Socket} socket
+	 * @param {string} room_id
+	 * @param {string} user_id
+	 * @param {string} message
+	 * @param {CallbackAcknowledgement<Chat>} cb
+	 */
+	onSendMessage(socket, room_id, user_id, message, cb) {
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(`Room with id ${room_id} not found in store when it received a message.`);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		const user = this.store.getUser(user_id);
+
+		if (!user) {
+			console.error(`User with id ${user_id} not found in store when it sent a message.`);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		const chat = this.store.addChat(room_id, user, message);
+
+		cb(200, chat);
+		socket.broadcast.to(room_id).emit("user_sent_message", chat);
+	}
+
+	/**
+	 * @param {string} room_id
+	 * @param {CallbackAcknowledgement<import("./adapters/in-memory.mjs").Chats | undefined>} cb
+	 */
+	onRequestChatsInRoom(room_id, cb) {
+		const chats = this.store.getChats(room_id);
+
+		cb(200, chats);
 	}
 
 	/**

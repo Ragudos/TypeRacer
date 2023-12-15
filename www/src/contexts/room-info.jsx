@@ -15,10 +15,12 @@ import { toast } from "react-hot-toast";
 /**
  * @type {React.Context<RoomInfoContextType>}
  */
-export const RoomInfoContext = React.createContext(/** @type {RoomInfoContextType} */({
-	roomInfo: undefined,
-	setRoomInfo: () => {}
-}));
+export const RoomInfoContext = React.createContext(
+	/** @type {RoomInfoContextType} */ ({
+		roomInfo: undefined,
+		setRoomInfo: () => {},
+	}),
+);
 
 /**
  * @param {{ children: React.ReactNode }} props
@@ -32,52 +34,50 @@ export const RoomInfoContextProvider = (props) => {
 	/**
 	 * @type {(userInfo: UserInfo) => void}
 	 */
-	const onUserJoined = React.useCallback(
-		(userInfo) => {
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
-				}
+	const onUserJoined = React.useCallback((userInfo) => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
 
-				return {
-					...prevRoomInfo,
-					users: [...prevRoomInfo.users, userInfo]
-				};
-			});
-			
-			toast(`${userInfo.username} joined the room.`);
-		},
-		[]
-	);
+			return {
+				...prevRoomInfo,
+				users: [...prevRoomInfo.users, userInfo],
+			};
+		});
+
+		toast(`${userInfo.username} joined the room.`);
+	}, []);
 
 	/**
 	 * @type {(userWhoLeft: UserInfo, newHostUserId: string) => void} userId
 	 */
-	const onUserLeft = React.useCallback(
-		(userWhoLeft, newHostUserId) => {
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
-				}
+	const onUserLeft = React.useCallback((userWhoLeft, newHostUserId) => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
 
-				return {
-					...prevRoomInfo,
-					users: prevRoomInfo.users.filter((user) => user.user_id !== userWhoLeft.user_id),
-					host_id: newHostUserId
-				};
-			});
+			return {
+				...prevRoomInfo,
+				users: prevRoomInfo.users.filter(
+					(user) => user.user_id !== userWhoLeft.user_id,
+				),
+				host_id: newHostUserId,
+			};
+		});
 
-			toast(`${userWhoLeft.username} left the room.`);
-		},
-		[]
-	);
+		toast(`${userWhoLeft.username} left the room.`);
+	}, []);
 
 	React.useEffect(() => {
 		socket.on("user_joined", onUserJoined);
 		socket.on("user_left", onUserLeft);
+		socket.on("send_room_info", setRoomInfo);
 		return () => {
 			socket.off("user_joined", onUserJoined);
 			socket.off("user_left", onUserLeft);
+			socket.off("send_room_info", setRoomInfo);
 		};
 	}, [onUserJoined, onUserLeft]);
 
@@ -87,4 +87,3 @@ export const RoomInfoContextProvider = (props) => {
 		</RoomInfoContext.Provider>
 	);
 };
-

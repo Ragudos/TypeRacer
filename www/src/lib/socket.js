@@ -10,6 +10,5 @@ import socket_io from "socket.io-client";
  * @type {import("socket.io-client").Socket<ServerToClient, ClientToServer>}
  */
 export const socket = socket_io("http://localhost:8080", {
-	autoConnect: false
+	autoConnect: false,
 });
-

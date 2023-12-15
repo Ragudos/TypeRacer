@@ -12,13 +12,13 @@ export default function ErrorCatcher() {
 	 */
 	const handleError = React.useCallback(
 		(error) => {
-
 			if (
 				error.name === SOCKET_ERRORS.ERROR ||
 				error.name === SOCKET_ERRORS.ROOM_FULL ||
 				error.name === SOCKET_ERRORS.ROOM_NOT_FOUND ||
 				error.name === SOCKET_ERRORS.ROOM_CLOSED ||
-				error.name === SOCKET_ERRORS.SERVER_FULL
+				error.name === SOCKET_ERRORS.SERVER_FULL ||
+				error.name === SOCKET_ERRORS.SERVER_SHUTDOWN
 			) {
 				console.error(error.message);
 				toast.error(error.message);
@@ -26,7 +26,7 @@ export default function ErrorCatcher() {
 				setIsConnected(false);
 			}
 		},
-		[setIsConnected]
+		[setIsConnected],
 	);
 
 	React.useEffect(() => {
@@ -38,4 +38,3 @@ export default function ErrorCatcher() {
 
 	return null;
 }
-

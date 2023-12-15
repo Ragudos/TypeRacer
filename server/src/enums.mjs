@@ -9,6 +9,7 @@ const SOCKET_ERRORS = /** @type {const} */ ({
 	ROOM_NOT_FOUND: "RoomNotFound",
 	ROOM_CLOSED: "RoomClosed",
 	ERROR: "Error",
+	SERVER_SHUTDOWN: "ServerShutdown",
 });
 
 const SOCKET_ROOM_TYPES = /** @type {const} */ ({

@@ -6,15 +6,17 @@ import { socket } from "../lib/socket";
 import { toast } from "react-hot-toast";
 import useRoomInfo from "../hooks/useRoomInfo";
 
+const MAX_USERNAME_LENGTH = 20;
+
 export default function HomePage() {
 	const { setIsConnected } = useSocketConnection();
 	const { setUsername, username, avatar, setAvatar } = useUserInfo();
 	const { roomId, setRoomId } = useRoomId();
 	const { setRoomInfo } = useRoomInfo();
-	const [transition, startTransition] = React.useTransition();
-	
+	const [isLoading, setIsLoading] = React.useState(false);
+
 	/**
-	 * @type {React.MutableRefObject<(_param: any) => void>}
+	 * @type {React.MutableRefObject<(_param: string) => void>}
 	 */
 	const resolvePromise = React.useRef();
 	/**
@@ -36,12 +38,10 @@ export default function HomePage() {
 				return;
 			}
 
-			console.log("Successfully connected to server. Joing room");
-
 			setRoomInfo(data);
 			setRoomId(data.room_id);
 
-			resolvePromise.current?.();
+			resolvePromise.current?.(message);
 		});
 		socket.off("connect_error", handleConnectError);
 	}
@@ -58,7 +58,7 @@ export default function HomePage() {
 			setRoomInfo(data);
 			setRoomId(data.room_id);
 
-			resolvePromise.current?.();
+			resolvePromise.current?.(message);
 		});
 		socket.off("connect_error", handleConnectError);
 	}
@@ -69,31 +69,42 @@ export default function HomePage() {
 			return;
 		}
 
-		startTransition(() => {
-			const toastId = toast.loading("Connecting to server...");
+		if (username.length > MAX_USERNAME_LENGTH) {
+			toast.error(
+				`Username cannot be longer than ${MAX_USERNAME_LENGTH} characters`,
+			);
+			return;
+		}
 
-			new Promise((resolve, reject) => {
-				resolvePromise.current = resolve;
-				rejectPromise.current = reject;
+		setIsLoading(true);
+		const toastId = toast.loading("Connecting to server...");
 
-				socket.once("connect", handleConnectOnPlay);
-				socket.once("connect_error", handleConnectError);
+		new Promise((resolve, reject) => {
+			resolvePromise.current = resolve;
+			rejectPromise.current = reject;
 
-				socket.auth = { username, avatar };
-				socket.connect();
+			socket.once("connect", handleConnectOnPlay);
+			socket.once("connect_error", handleConnectError);
 
-				setUsername("");
-			}).then(() => {
+			socket.auth = { username, avatar };
+			socket.connect();
+
+			setUsername("");
+		})
+			.then((message) => {
+				toast.success(message);
 				setIsConnected(true);
-			}).catch((err) => {
+			})
+			.catch((err) => {
 				toast.error(err instanceof Error ? err.message : err);
 				socket.disconnect();
-			}).finally(() => {
+			})
+			.finally(() => {
 				resolvePromise.current = undefined;
 				rejectPromise.current = undefined;
 				toast.dismiss(toastId);
+				setIsLoading(false);
 			});
-		});
 	}
 
 	function handleCreateRoom() {
@@ -102,31 +113,43 @@ export default function HomePage() {
 			return;
 		}
 
-		startTransition(() => {
-			const toastId = toast.loading("Connecting to server...");
+		if (username.length > MAX_USERNAME_LENGTH) {
+			toast.error(
+				`Username cannot be longer than ${MAX_USERNAME_LENGTH} characters`,
+			);
+			return;
+		}
 
-			new Promise((resolve, reject) => {
-				resolvePromise.current = resolve;
-				rejectPromise.current = reject;
+		setIsLoading(true);
 
-				socket.once("connect", handleConnectOnRoomCreation);
-				socket.once("connect_error", handleConnectError);
+		const toastId = toast.loading("Connecting to server...");
 
-				socket.auth = { username, avatar };
-				socket.connect();
+		new Promise((resolve, reject) => {
+			resolvePromise.current = resolve;
+			rejectPromise.current = reject;
 
-				setUsername("");
-			}).then(() => {
+			socket.once("connect", handleConnectOnRoomCreation);
+			socket.once("connect_error", handleConnectError);
+
+			socket.auth = { username, avatar };
+			socket.connect();
+
+			setUsername("");
+		})
+			.then((message) => {
+				toast.success(message);
 				setIsConnected(true);
-			}).catch((err) => {
+			})
+			.catch((err) => {
 				toast.error(err instanceof Error ? err.message : err);
 				socket.disconnect();
-			}).finally(() => {
+			})
+			.finally(() => {
 				resolvePromise.current = undefined;
 				rejectPromise.current = undefined;
 				toast.dismiss(toastId);
+				setIsLoading(false);
 			});
-		});
 	}
 
 	return (
@@ -144,7 +167,7 @@ export default function HomePage() {
 							onChange={(e) => {
 								setUsername(e.target.value);
 							}}
-							disabled={transition}
+							disabled={isLoading}
 						/>
 					</div>
 					<div style={{ width: "100%" }}>
@@ -152,7 +175,7 @@ export default function HomePage() {
 							type="button"
 							className="btn btn-primary"
 							onClick={handlePlay}
-							disabled={transition}
+							disabled={isLoading}
 							style={{ width: "100%", marginBottom: "0.5rem" }}
 						>
 							Play
@@ -161,7 +184,7 @@ export default function HomePage() {
 							type="button"
 							className="btn btn-secondary"
 							onClick={handleCreateRoom}
-							disabled={transition}
+							disabled={isLoading}
 							style={{ width: "100%" }}
 						>
 							Create Private Room
@@ -172,4 +195,3 @@ export default function HomePage() {
 		</React.Fragment>
 	);
 }
-

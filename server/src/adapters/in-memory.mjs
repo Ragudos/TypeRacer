@@ -21,6 +21,14 @@ const MAX_ALLOWED_ROOMS = 1;
  * @property {string} user_id
  * @property {string} username
  * @property {string} avatar
+ *
+ * @typedef {Object} Chat
+ * @property {string} user_id
+ * @property {string} username
+ * @property {string} message
+ * @property {number} created_at
+ *
+ * @typedef {Chat[]} Chats
  */
 
 class InMemoryStore {
@@ -40,9 +48,44 @@ class InMemoryStore {
 		this.users = new Map();
 		/**
 		 * @private
+		 * @type {Map<string, Chats>}
+		 */
+		this.chats = new Map();
+		/**
+		 * @private
 		 * @type {import("../server.mjs").Server}
 		 */
 		this.server = server;
+	}
+
+	/**
+	 * @param {string} room_id
+	 * @param {User} user
+	 * @param {string} message
+	 * @returns {Chat}
+	 */
+	addChat(room_id, user, message) {
+		const chat = {
+			user_id: user.user_id,
+			username: user.username,
+			message,
+			created_at: Date.now(),
+		};
+
+		if (!this.chats.has(room_id)) {
+			this.chats.set(room_id, []);
+		}
+
+		this.chats.get(room_id)?.push(chat);
+
+		return chat;
+	}
+
+	/**
+	 * @param {string} room_id
+	 */
+	getChats(room_id) {
+		return this.chats.get(room_id);
 	}
 
 	/**
