@@ -46,7 +46,7 @@
 	padding: 0.25rem;
 	padding-top: 0.5rem;
 	border-radius: var(--radius);
-	min-width: min(90vw, calc(30em));
+	width: min(80vw, calc(50em));
 
 	background-color: hsl(var(--background));
 
@@ -72,16 +72,23 @@
 	border-radius: var(--radius);
 }
 
+.chat-box ul li {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5rem;
+	margin-block: 0.75rem;
+}
+
 .chat-box ul li p {
 	display: inline-block;
 	padding: 0.25rem 0.5rem;
 
-	margin-block: 0.5rem;
+	margin-block: 0;
 
 	border-radius: calc(var(--radius) - 2px);
 	background-color: hsl(var(--accent));
 	font-size: 0.75rem;
-	max-width: 24rem;
+	max-width: 20rem;
 	word-break: break-all;
 }
 

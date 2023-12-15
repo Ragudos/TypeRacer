@@ -167,9 +167,10 @@ const Chat = React.memo(function () {
 
 						return (
 							<li style={ didUserLeave ? { opacity: "0.5" } : undefined } ref={idx === chats.length - 1 ? scrollToRef : undefined} key={chat.user_id + chat.created_at}>
-								{chat.username} {chat.user_id === userInfo.userId && (
+								<div style={{ fontSize: "0.875rem", overflowWrap: "break-word", wordWrap: "break-word" 	}}
+								>{chat.username} {chat.user_id === userInfo.userId && (
 									<small>&#40;you&#41;</small>
-								)}: <p>{chat.message}</p> <time dateTime={date} style={{ fontSize: "0.75rem" }}>{date}</time> { didUserLeave && <small>&#40;left&#41;</small> }
+								)}:</div> <p>{chat.message}</p> <time dateTime={date} style={{ fontSize: "0.675rem" }}>{date}</time> { didUserLeave && <small>&#40;left&#41;</small> }
 							</li>
 						);
 					})}
