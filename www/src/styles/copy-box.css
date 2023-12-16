@@ -1,0 +1,12 @@
+
+.copy-box {
+	align-items: center;
+	display: inline-flex;
+	border: 1px inset hsl(var(--accent));
+	border-radius: calc(var(--radius) - 2px);
+}
+
+.copy-box__text {
+	padding-left: 1rem;
+}
+

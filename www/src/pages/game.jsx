@@ -50,32 +50,32 @@ export default function GamePage() {
 				)}
 			</div>
 
-				<Chat />
-				<ul>
-					{roomInfo.users.map((user) => (
-						<li key={user.user_id} className="player">
-							{user.avatar && (
-								<img
-									src={user.avatar}
-									alt={`${user.username}'s avatar`}
-									className="icon"
-									loading="eager"
-								/>
+			<Chat />
+			<ul>
+				{roomInfo.users.map((user) => (
+					<li key={user.user_id} className="player">
+						{user.avatar && (
+							<img
+								src={user.avatar}
+								alt={`${user.username}'s avatar`}
+								className="icon"
+								loading="eager"
+							/>
+						)}
+						<span>
+							{user.user_id === roomInfo.host_id && (
+								<small>👑</small>
 							)}
-							<span>
-								{user.user_id === roomInfo.host_id && (
-									<small>👑</small>
-								)}
-								{user.user_id === userInfo.userId && (
-									<small style={{ wordBreak: "keep-all" }}>
-										&#40;you&#41;
-									</small>
-								)}
-								&nbsp;<b>{user.username}</b>
-							</span>
-						</li>
-					))}
-				</ul>
+							{user.user_id === userInfo.userId && (
+								<small style={{ wordBreak: "keep-all" }}>
+									&#40;you&#41;
+								</small>
+							)}
+							&nbsp;<b>{user.username}</b>
+						</span>
+					</li>
+				))}
+			</ul>
 		</div>
 	);
 }

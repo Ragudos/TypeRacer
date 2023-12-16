@@ -147,7 +147,7 @@ const Chat = React.memo(function () {
 					return (
 						<p
 							style={
-								didUserLeave ? { opacity: "0.75" } : undefined
+								didUserLeave ? { opacity: "0.5" } : undefined
 							}
 							ref={
 								idx === chats.length - 1
@@ -158,6 +158,9 @@ const Chat = React.memo(function () {
 						>
 							<b>{chat.username}:</b>&nbsp;
 							<span>{chat.message}</span>
+							{didUserLeave && (
+								<small>&nbsp;&#40;left&#41;</small>
+							)}
 						</p>
 					);
 				})}
@@ -168,7 +171,6 @@ const Chat = React.memo(function () {
 				</label>
 				<small id="chat-errormessage">{sendMessageError}</small>
 				<input
-					disabled={isLoading}
 					value={message}
 					onChange={(e) => {
 						setMessage(e.target.value);

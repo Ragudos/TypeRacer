@@ -1,0 +1,16 @@
+
+.change-max-players__body {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+
+	max-width: 20rem;
+
+	padding: 0.75rem;
+	background-color: hsl(var(--popover));
+
+	box-shadow: 0px 6px 32px hsl(var(--secondary) / 0.175);
+	border-radius: var(--radius);
+}
+

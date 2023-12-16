@@ -18,8 +18,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 						toastOptions={{
 							position: "top-right",
 							style: {
-								backgroundColor: "var(--background)",
-								color: "var(--foreground)",
+								backgroundColor: "hsl(var(--background))",
+								color: "hsl(var(--foreground))",
 								boxShadow:
 									"0 4px 12px hsl(var(--foreground) / 0.075)",
 							},

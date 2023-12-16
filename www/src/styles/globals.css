@@ -83,7 +83,7 @@ html:focus {
 body {
 	min-height: 100dvh;
 
-	font-family: "Inter", system-ui, sans-serif;
+	font-family: system-ui, sans-serif;
 	font-size: 1rem;
 	font-synthesis: none;
 	-webkit-text-size-adjust: 100%;
@@ -149,11 +149,26 @@ a {
 	font-size: 0.875rem;
 }
 
+
 button:focus-visible,
 input[type=submit]:focus-visible,
 a:focus-visible {
 	--_ring: 0px 0px 0px 3px;
 	--_ring-offset: 0px 0px 0px 2px;
+}
+
+.btn-reversed {
+	background-color: hsl(var(--background));
+	color: hsl(var(--foreground));
+}
+
+.btn-reversed:hover {
+	--_bg-opacity: 0.8;
+}
+
+.btn-foreground {
+	background-color: hsl(var(--foreground));
+	color: hsl(var(--background));
 }
 
 .btn-primary {
@@ -214,7 +229,35 @@ a:active {
 .btn-icon {
 	min-width: 1.5rem;
 	min-height: 1.5rem;
+	padding: 0.5rem;
 }
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+a:disabled {
+	opacity: 0.5 !important;
+	--_bg-opacity: 1 !important;
+	cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	line-height: 1;
+}
+
+h1 { font-size: 2.027rem; }
+h2 { font-size: 1.802rem; }
+h3 { font-size: 1.602rem; }
+h4 { font-size: 1.424rem; }
+h5 { font-size: 1.266rem; }
+h6 { font-size: 1.125rem; }
+p { font-size: 1rem; }
+small { font-size: 0.889rem; }
 
 #root {
 	min-height: 100dvh;
@@ -298,5 +341,39 @@ ul, ol {
 	height: 1px;
 	overflow: hidden;
 	position: absolute;
+}
+
+.dialog-arrow {
+	fill: hsl(var(--popover));
+}
+
+.dialog__slideright {
+	animation: slide-right 0.175s ease-out;
+}
+
+.dialog__slideleft {
+	animation: slide-left 0.175s ease-out;
+}
+
+@keyframes slide-right {
+	from {
+		opacity: 0;
+		transform: translateX(-5%);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes slide-left {
+	from {
+		opacity: 0;
+		transform: translateX(0);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-5%);
+	}
 }
 

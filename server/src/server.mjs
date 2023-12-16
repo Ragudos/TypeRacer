@@ -2,12 +2,13 @@
 
 import { InMemoryStore } from "./adapters/in-memory.mjs";
 import { SOCKET_ERRORS, SOCKET_ROOM_TYPES } from "./enums.mjs";
-import { genRandomId, sleep } from "./lib/utils.mjs";
+import { genRandomId } from "./lib/utils.mjs";
+import { MAX_USERNAME_LENGTH } from "../../www/src/consts.js";
 
 /**
  * @template T
  * @callback CallbackAcknowledgement
- * @param {(500 | 200)} status - Status of the acknowledgement.
+ * @param {(500 | 403 | 404 | 400 | 200)} status - Status of the acknowledgement.
  * @param {T | undefined} data - Data to be passed to the client.
  * @param {string} [message] - Message to be passed to the client.
  */
@@ -34,14 +35,18 @@ import { genRandomId, sleep } from "./lib/utils.mjs";
  * @property {(user: User) => void} send_user_info
  * @property {(room_info: Room) => void} send_room_info
  * @property {(chat: Chat) => void} user_sent_message
+ * @property {(new_type: import("./enums.mjs").SocketRoomType) => void} room_type_changed
+ * @property {(new_max: number) => void} max_players_changed
  *
  * @typedef {Object} ClientToServer
  * @property {(cb: RoomCreationAcknowledgement) => void} create_room
  * @property {(room_id: string, cb: RoomJoinAcknowledgement)=> void} join_room
  * @property {(room_id: string) => void} leave_room
- * @property {(room_id: string) => void} request_room_info
+ * @property {(room_id: string, cb: CallbackAcknowledgement<Room | undefined>) => void} request_room_info
  * @property {(room_id: string, cb: CallbackAcknowledgement<import("./adapters/in-memory.mjs").Chats | undefined>) => void} request_chats_in_room
  * @property {(room_id: string, user_id: string, message: string, cb: CallbackAcknowledgement<Chat>) => void} send_message
+ * @property {(room_id: string, user_id: string, new_type: import("./enums.mjs").SocketRoomType, cb: CallbackAcknowledgement<undefined>) => void} change_room_type
+ * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -83,13 +88,119 @@ class TypingGameServer {
 		socket.on("disconnecting", (reason) => {
 			this.onDisconnecting(socket, reason);
 		});
-		socket.on("request_room_info", (room_id) => {
-			this.onRequestRoomInfo(socket, room_id);
-		});
-		socket.on("request_chats_in_room", this.onRequestChatsInRoom.bind(this));
+		socket.on("request_room_info", this.onRequestRoomInfo.bind(this));
+		socket.on(
+			"request_chats_in_room",
+			this.onRequestChatsInRoom.bind(this),
+		);
 		socket.on("send_message", (room_id, user_id, message, cb) => {
 			this.onSendMessage(socket, room_id, user_id, message, cb);
 		});
+		socket.on("change_room_type", (room_id, user_id, new_type, cb) => {
+			this.onChangeRoomType(socket, room_id, user_id, new_type, cb);
+		});
+		socket.on("change_max_players", (room_id, user_id, new_max, cb) => {
+			this.onChangeMaxPlayers(socket, room_id, user_id, new_max, cb);
+		});
+	}
+
+	/**
+	 * @param {Socket} socket
+	 * @param {string} room_id
+	 * @param {string} user_id
+	 * @param {number} new_max
+	 * @param {CallbackAcknowledgement<undefined>} cb
+	 */
+	onChangeMaxPlayers(socket, room_id, user_id, new_max, cb) {
+		if (new_max < 2) {
+			cb(400, undefined, "Max players must be at least 2.");
+			return;
+		} else if (new_max > 6) {
+			cb(400, undefined, "Max players must be at most 6.");
+			return;
+		}
+
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(
+				`Room with id ${room_id} not found in store when it changed max players.`,
+			);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		if (room.users.length > new_max) {
+			cb(
+				400,
+				undefined,
+				"New room capacity cannot be less than the current number of users in the room.",
+			);
+			return;
+		}
+
+		const user = this.store.getUser(user_id);
+
+		if (!user) {
+			console.error(
+				`User with id ${user_id} not found in store when it changed max players.`,
+			);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		if (room.host_id !== user_id) {
+			console.error(
+				`User with id ${user_id} tried to change the max players of room with id ${room_id} but they are not the host.`,
+			);
+			cb(403, undefined, "You are not the host of this room.");
+			return;
+		}
+
+		socket.broadcast.to(room_id).emit("max_players_changed", new_max);
+		room.max_users = new_max;
+		cb(200, undefined, "Successfully changed max players.");
+	}
+
+	/**
+	 * @param {Socket} socket
+	 * @param {string} room_id
+	 * @param {string} user_id
+	 * @param {import("./enums.mjs").SocketRoomType} new_type
+	 * @param {CallbackAcknowledgement<undefined>} cb
+	 */
+	onChangeRoomType(socket, room_id, user_id, new_type, cb) {
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(
+				`Room with id ${room_id} not found in store when it changed types.`,
+			);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		const user = this.store.getUser(user_id);
+
+		if (!user) {
+			console.error(
+				`User with id ${user_id} not found in store when it changed types.`,
+			);
+			cb(500, undefined, "Internal Server Error");
+			return;
+		}
+
+		if (room.host_id !== user_id) {
+			console.error(
+				`User with id ${user_id} tried to change the room type of room with id ${room_id} but they are not the host.`,
+			);
+			cb(403, undefined, "You are not the host of this room.");
+			return;
+		}
+
+		socket.broadcast.to(room_id).emit("room_type_changed", new_type);
+		room.room_type = new_type;
+		cb(200, undefined, "Successfully changed room type.");
 	}
 
 	/**
@@ -103,7 +214,9 @@ class TypingGameServer {
 		const room = this.store.getRoom(room_id);
 
 		if (!room) {
-			console.error(`Room with id ${room_id} not found in store when it received a message.`);
+			console.error(
+				`Room with id ${room_id} not found in store when it received a message.`,
+			);
 			cb(500, undefined, "Internal Server Error");
 			return;
 		}
@@ -111,7 +224,9 @@ class TypingGameServer {
 		const user = this.store.getUser(user_id);
 
 		if (!user) {
-			console.error(`User with id ${user_id} not found in store when it sent a message.`);
+			console.error(
+				`User with id ${user_id} not found in store when it sent a message.`,
+			);
 			cb(500, undefined, "Internal Server Error");
 			return;
 		}
@@ -133,21 +248,18 @@ class TypingGameServer {
 	}
 
 	/**
-	 * @param {Socket} socket
 	 * @param {string} room_id
+	 * @param {CallbackAcknowledgement<Room | undefined>} cb
 	 */
-	onRequestRoomInfo(socket, room_id) {
+	onRequestRoomInfo(room_id, cb) {
 		const room = this.store.getRoom(room_id);
 
 		if (!room) {
-			socket.emit("error", {
-				name: SOCKET_ERRORS.ROOM_NOT_FOUND,
-				message: `Room with id ${room_id} not found.`,
-			});
+			cb(404, undefined, "Room not found.");
 			return;
 		}
 
-		socket.emit("send_room_info", room);
+		cb(200, room);
 	}
 
 	/**
@@ -227,6 +339,18 @@ class TypingGameServer {
 	 */
 	middleware = async (socket, next) => {
 		const auth_handshake = socket.handshake.auth;
+
+		if (!auth_handshake.username) {
+			next(new Error("Username is required."));
+		}
+
+		if (auth_handshake.username.length >= MAX_USERNAME_LENGTH) {
+			next(
+				new Error(
+					`Username must be less than ${MAX_USERNAME_LENGTH} characters.`,
+				),
+			);
+		}
 
 		try {
 			const user_id = await genRandomId();

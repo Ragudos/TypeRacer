@@ -70,16 +70,57 @@ export const RoomInfoContextProvider = (props) => {
 		toast(`${userWhoLeft.username} left the room.`);
 	}, []);
 
+	/**
+	 * @type {(roomType: import("../../../server/src/enums.mjs").SocketRoomType) => void}
+	 */
+	const receiveRoomTypeChanged = React.useCallback((roomType) => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
+
+			return {
+				...prevRoomInfo,
+				room_type: roomType,
+			};
+		});
+	}, []);
+
+	/**
+	 * @type {(maxPlayers: number) => void}
+	 */
+	const receiveMaxPlayersChanged = React.useCallback((maxPlayers) => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
+
+			return {
+				...prevRoomInfo,
+				max_users: maxPlayers,
+			};
+		});
+	}, []);
+
 	React.useEffect(() => {
+		socket.on("max_players_changed", receiveMaxPlayersChanged);
+		socket.on("room_type_changed", receiveRoomTypeChanged);
 		socket.on("user_joined", onUserJoined);
 		socket.on("user_left", onUserLeft);
 		socket.on("send_room_info", setRoomInfo);
 		return () => {
+			socket.off("max_players_changed", receiveMaxPlayersChanged);
+			socket.off("room_type_changed", receiveRoomTypeChanged);
 			socket.off("user_joined", onUserJoined);
 			socket.off("user_left", onUserLeft);
 			socket.off("send_room_info", setRoomInfo);
 		};
-	}, [onUserJoined, onUserLeft]);
+	}, [
+		onUserJoined,
+		onUserLeft,
+		receiveRoomTypeChanged,
+		receiveMaxPlayersChanged,
+	]);
 
 	return (
 		<RoomInfoContext.Provider value={{ roomInfo, setRoomInfo }}>

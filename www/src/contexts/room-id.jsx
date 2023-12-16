@@ -1,7 +1,6 @@
 // @ts-check
 
 import React from "react";
-import { socket } from "../lib/socket";
 
 /**
  * @typedef {Object} RoomIdContext
@@ -12,10 +11,12 @@ import { socket } from "../lib/socket";
 /**
  * @type {React.Context<RoomIdContext>}
  */
-export const RoomIdContext = React.createContext({
-	roomId: "",
-	setRoomId: () => {},
-});
+export const RoomIdContext = React.createContext(
+	/** @type {RoomIdContext} */ ({
+		roomId: "",
+		setRoomId: () => {},
+	}),
+);
 
 /**
  * @param {{ children: React.ReactNode }} props
@@ -25,7 +26,7 @@ export const RoomIdContextProvider = (props) => {
 
 	React.useEffect(() => {
 		const url = new URL(window.location.href);
-		const roomId = url.searchParams.get("roomID");
+		const roomId = url.searchParams.get("roomId");
 		if (roomId) {
 			setRoomId(roomId);
 		}

@@ -5,8 +5,7 @@ import useRoomId from "../hooks/useRoomId";
 import { socket } from "../lib/socket";
 import { toast } from "react-hot-toast";
 import useRoomInfo from "../hooks/useRoomInfo";
-
-const MAX_USERNAME_LENGTH = 20;
+import { MAX_USERNAME_LENGTH } from "../consts";
 
 export default function HomePage() {
 	const { setIsConnected } = useSocketConnection();
@@ -64,6 +63,10 @@ export default function HomePage() {
 	}
 
 	function handlePlay() {
+		if (isLoading) {
+			return;
+		}
+
 		if (!username) {
 			toast.error("Username is required");
 			return;
@@ -88,8 +91,6 @@ export default function HomePage() {
 
 			socket.auth = { username, avatar };
 			socket.connect();
-
-			setUsername("");
 		})
 			.then((message) => {
 				toast.success(message);
@@ -108,6 +109,10 @@ export default function HomePage() {
 	}
 
 	function handleCreateRoom() {
+		if (isLoading) {
+			return;
+		}
+
 		if (!username) {
 			toast.error("Username is required");
 			return;
@@ -133,8 +138,6 @@ export default function HomePage() {
 
 			socket.auth = { username, avatar };
 			socket.connect();
-
-			setUsername("");
 		})
 			.then((message) => {
 				toast.success(message);
@@ -167,7 +170,6 @@ export default function HomePage() {
 							onChange={(e) => {
 								setUsername(e.target.value);
 							}}
-							disabled={isLoading}
 						/>
 					</div>
 					<div style={{ width: "100%" }}>

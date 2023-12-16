@@ -22,14 +22,21 @@ new TypingGameServer(websocket_server);
 websocket_server.listen(+port);
 
 process.on("SIGINT", () => {
-	websocket_server.emit("error", { name: SOCKET_ERRORS.SERVER_SHUTDOWN, message: "The server has been shut down. We apologize for the convenience." });
+	websocket_server.emit("error", {
+		name: SOCKET_ERRORS.SERVER_SHUTDOWN,
+		message:
+			"The server has been shut down. We apologize for the convenience.",
+	});
 	websocket_server.close();
 	process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-	websocket_server.emit("error", { name: SOCKET_ERRORS.SERVER_SHUTDOWN, message: "The server has been shut down. We apologize for the convenience." });
+	websocket_server.emit("error", {
+		name: SOCKET_ERRORS.SERVER_SHUTDOWN,
+		message:
+			"The server has been shut down. We apologize for the convenience.",
+	});
 	websocket_server.close();
 	process.exit(0);
 });
-

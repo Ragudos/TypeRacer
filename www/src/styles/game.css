@@ -31,9 +31,10 @@
 
 .game-grid > * {
 	max-width: calc(100vw - var(--padding-inline) * 4);
+	border-radius: var(--radius);
 	padding: 0.5rem;
 	background-color: hsl(var(--background));
-	border: 1px solid;
+	border: 1px inset;
 	height: fit-content;
 }
 
@@ -60,9 +61,14 @@
 
 .chat-box .chat-content > p {
 	margin: 0;
-	padding-block: 0.25em;
+	padding-block: 0.175em;
 	opacity: 1;
 	animation: fade-in 0.25s ease-in-out;
+}
+
+.chat-box .chat-content > p:nth-child(even) {
+	background-color: hsl(var(--muted) / 0.25);
+	color: hsl(var(--muted-foreground));
 }
 
 @keyframes fade-in {
@@ -75,7 +81,6 @@
 }
 
 .chat-box form {
-	position: relative;
 	display: flex;
 	padding-top: 0.5rem;
 	background-color: hsl(var(--background));
@@ -86,10 +91,15 @@
 }
 
 .chat-box form #chat-errormessage {
-	position: absolute;
 	bottom: 110%;
 	left: 0.175rem;
 	background-color: hsl(var(--background));
 	color: hsl(var(--destructive));
+}
+
+.waiting-screen__room-info ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
 }
 
