@@ -84,6 +84,7 @@
 	display: flex;
 	padding-top: 0.5rem;
 	background-color: hsl(var(--background));
+	position: relative;
 }
 
 .chat-box form input {
@@ -91,6 +92,7 @@
 }
 
 .chat-box form #chat-errormessage {
+	position: absolute;
 	bottom: 110%;
 	left: 0.175rem;
 	background-color: hsl(var(--background));

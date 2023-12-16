@@ -65,7 +65,7 @@ export default function ChangeMaxPlayers() {
 	}
 
 	return (
-		<Root modal={true}>
+		<Root>
 			<Trigger
 				className="btn-accent"
 				aria-label="Change the maximum amount of players who can join the room"

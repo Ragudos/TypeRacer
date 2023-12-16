@@ -159,7 +159,7 @@ class TypingGameServer {
 
 		socket.broadcast.to(room_id).emit("max_players_changed", new_max);
 		room.max_users = new_max;
-		cb(200, undefined, "Successfully changed max players.");
+		cb(200, undefined, "Successfully changed room capacity.");
 	}
 
 	/**
