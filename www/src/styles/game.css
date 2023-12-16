@@ -2,13 +2,23 @@
 	display: grid;
 	gap: 1rem;
 	grid-template-areas: 
-		"main-screen main-screen"
-		"chat-box list-of-players"
+		"main-screen"
+		"chat-box"
+		"list-of-players";
 }
 
-@media only screen and (min-width: 1280px) {
+@media only screen and (min-width: 768px) {
 	.game-grid {
-		grid-template-columns: 1fr 2fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-areas: 
+			"main-screen main-screen main-screen"
+			"chat-box chat-box list-of-players"
+	}
+}
+
+@media only screen and (min-width: 1536px) {
+	.game-grid {
+		grid-template-columns: 25% 2fr 1fr;
 		grid-template-areas: 
 			"chat-box main-screen list-of-players"
 	}
@@ -20,25 +30,31 @@
 }
 
 .game-grid > * {
+	max-width: calc(100vw - var(--padding-inline) * 4);
+	padding: 0.5rem;
 	background-color: hsl(var(--background));
-	box-shadow: 0 6px 24px hsl(var(--foreground) / 0.175);
+	border: 1px solid;
 	height: fit-content;
 }
 
+@media only screen and (min-width: 768px) {
+	.game-grid > * {
+		max-width: unset;
+	}
+}
+
 .game-grid ul {
-	padding: 0.5rem;
 	word-wrap: break-word;
 	grid-area: list-of-players;
 }
 
 .chat-box {
-	padding: 0.5rem;
 	grid-area: chat-box;
 }
 
 .chat-box .chat-content {
 	overflow-y: auto;
-	max-height: 12rem;
+	max-height: 10rem;
 	word-wrap: break-word;
 }
 
@@ -61,6 +77,8 @@
 .chat-box form {
 	position: relative;
 	display: flex;
+	padding-top: 0.5rem;
+	background-color: hsl(var(--background));
 }
 
 .chat-box form input {
