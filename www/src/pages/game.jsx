@@ -5,7 +5,7 @@ import { SOCKET_ROOM_STATUS } from "../../../server/src/enums.mjs";
 import WaitingScreen from "../components/waiting-screen";
 import Loader from "../components/loader.jsx";
 import "../styles/game.css";
-import GameTooltip from "../components/game-tooltip.jsx";
+import Chat from "../components/chat.jsx";
 
 const GameScreen = React.lazy(() => import("../components/game-screen"));
 const CountdownScreen = React.lazy(
@@ -25,7 +25,7 @@ export default function GamePage() {
 	}
 
 	return (
-		<div className="container">
+		<div className="container game-grid">
 			<div className="main-screen">
 				{roomInfo.room_status === SOCKET_ROOM_STATUS.WAITING && (
 					<WaitingScreen />
@@ -50,8 +50,7 @@ export default function GamePage() {
 				)}
 			</div>
 
-			<div className="list-of-players">
-				<GameTooltip />
+				<Chat />
 				<ul>
 					{roomInfo.users.map((user) => (
 						<li key={user.user_id} className="player">
@@ -63,13 +62,7 @@ export default function GamePage() {
 									loading="eager"
 								/>
 							)}
-							<span
-								style={{
-									marginLeft: "0.5rem",
-									display: "flex",
-									gap: "0.5rem",
-								}}
-							>
+							<span>
 								{user.user_id === roomInfo.host_id && (
 									<small>👑</small>
 								)}
@@ -78,12 +71,11 @@ export default function GamePage() {
 										&#40;you&#41;
 									</small>
 								)}
-								{user.username}
+								&nbsp;<b>{user.username}</b>
 							</span>
 						</li>
 					))}
 				</ul>
-			</div>
 		</div>
 	);
 }
