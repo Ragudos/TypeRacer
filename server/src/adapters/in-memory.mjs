@@ -1,5 +1,7 @@
 // @ts-check
 
+import { Timer } from "../Timer.mjs";
+import { COUNTDOWN_SPEED } from "../consts.mjs";
 import { SOCKET_ROOM_TYPES, SOCKET_ROOM_STATUS } from "../enums.mjs";
 import { genRandomId } from "../lib/utils.mjs";
 
@@ -53,9 +55,50 @@ class InMemoryStore {
 		this.chats = new Map();
 		/**
 		 * @private
+		 * @type {Map<string, Timer>}
+		 */
+		this.timers = new Map();
+		/**
+		 * @private
 		 * @type {import("../server.mjs").Server}
 		 */
 		this.server = server;
+	}
+
+	/**
+	 * @param {string} room_id
+	 * @param {number} duration in seconds
+	 */
+	startCountdown(room_id, duration) {
+		const timer = new Timer(COUNTDOWN_SPEED, duration, (currentTick, isFinished) => {
+			if (currentTick != undefined) {
+				this.server.to(room_id).emit("countdown", currentTick);
+			}
+
+			if (!isFinished) {
+				return;
+			}
+
+			this.timers.delete(room_id);
+			this.server.to(room_id).emit("countdown_finished");
+			console.debug(
+				`Countdown timer finished in room ${room_id}. Current state: `,
+				this.timers,
+			);
+	
+			const room = this.getRoom(room_id);
+
+			if (!room) {
+				console.error(`Room ${room_id} not found when countdown has finished.`);
+				return;
+			}
+
+			room.room_status = SOCKET_ROOM_STATUS.PLAYING;
+		});
+
+		this.timers.set(room_id, timer);
+		timer.start();
+		console.debug(`Started countdown in room ${room_id}. Current state: `, this.timers);
 	}
 
 	/**
@@ -76,9 +119,23 @@ class InMemoryStore {
 			this.chats.set(room_id, []);
 		}
 
-		this.chats.get(room_id)?.push(chat);
+		const chats = this.chats.get(room_id);
 
-		console.debug(`Added chat in room ${room_id}. Current state: `, this.chats);
+		if (!chats) {
+			console.error(`Chats for room ${room_id} not found despite creating one.`);
+			return chat;
+		}
+
+		chats.push(chat);
+		
+		if (chats.length > 10) {
+			chats.shift();
+		}
+
+		console.debug(
+			`Added chat in room ${room_id}. Current state: `,
+			this.chats,
+		);
 
 		return chat;
 	}
@@ -251,6 +308,23 @@ class InMemoryStore {
 	}
 
 	/**
+	 * Deletes all related storage of a room.
+	 * @param {string} room_id
+	 */
+	cleanup(room_id) {
+		const timer = this.timers.get(room_id);
+		
+		if (timer) {
+			timer.stop();
+			this.timers.delete(room_id);
+			console.log(`Deleted timer in room ${room_id} for cleanup. Current state: `, this.timers);
+		}
+
+		this.deleteChat(room_id);
+		this.deleteRoom(room_id);
+	}
+
+	/**
 	 * @param {import("../server.mjs").Socket} socket
 	 * @param {string} user_id
 	 * @param {string} room_id
@@ -269,8 +343,7 @@ class InMemoryStore {
 		}
 
 		if (room.users.length === 1) {
-			this.deleteRoom(room_id);
-			this.deleteChat(room_id);
+			this.cleanup(room_id);
 
 			return;
 		}
@@ -295,6 +368,17 @@ class InMemoryStore {
 		socket.leave(room_id);
 		this.server.to(room_id).emit("user_left", user, room.host_id);
 
+		if (room.users.length === 1 && room.room_status != SOCKET_ROOM_STATUS.WAITING && room.room_status != SOCKET_ROOM_STATUS.RESULTS) {
+			if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
+				this.timers.get(room_id)?.stop();
+				this.timers.delete(room_id);
+				console.log(`Deleted timer in room ${room_id} when resetting a room. Current state: `, this.timers);
+			}
+
+			room.room_status = SOCKET_ROOM_STATUS.WAITING;
+			this.server.to(room_id).emit("reset_room");
+		}
+
 		console.log(
 			`User ${user_id} left room ${room_id}. Current state: `,
 			this.rooms,
@@ -306,7 +390,10 @@ class InMemoryStore {
 	 */
 	deleteChat(chat_id) {
 		this.chats.delete(chat_id);
-		console.log(`Deleted chat data in room ${chat_id}. Current state: `, this.chats);	
+		console.log(
+			`Deleted chat data in room ${chat_id}. Current state: `,
+			this.chats,
+		);
 	}
 
 	/**

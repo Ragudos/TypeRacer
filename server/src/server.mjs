@@ -1,9 +1,9 @@
 // @ts-check
 
 import { InMemoryStore } from "./adapters/in-memory.mjs";
-import { SOCKET_ERRORS, SOCKET_ROOM_TYPES } from "./enums.mjs";
+import { SOCKET_ERRORS, SOCKET_ROOM_STATUS, SOCKET_ROOM_TYPES } from "./enums.mjs";
 import { genRandomId } from "./lib/utils.mjs";
-import { MAX_USERNAME_LENGTH } from "./consts.mjs";
+import { COUNTDOWN_COUNT, MAX_USERNAME_LENGTH } from "./consts.mjs";
 
 /**
  * @template T
@@ -35,6 +35,7 @@ import { MAX_USERNAME_LENGTH } from "./consts.mjs";
  * @property {(room_id: string, user_id: string, message: string, cb: CallbackAcknowledgement<Chat>) => void} send_message
  * @property {(room_id: string, user_id: string, new_type: import("./enums.mjs").SocketRoomType, cb: CallbackAcknowledgement<undefined>) => void} change_room_type
  * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
+ * @property {(room_id: string, user_id: string, cb: CallbackAcknowledgement<undefined>) => void} start_game
  *
  * @typedef {Object} ServerToClient
  * @property {(error: { name: SocketError; message: string; }) => void} error
@@ -47,6 +48,10 @@ import { MAX_USERNAME_LENGTH } from "./consts.mjs";
  * @property {(chat: Chat) => void} user_sent_message
  * @property {(new_type: import("./enums.mjs").SocketRoomType) => void} room_type_changed
  * @property {(new_max: number) => void} max_players_changed
+ * @property {() => void} game_started
+ * @property {(currentTick: number) => void} countdown
+ * @property {() => void} reset_room
+ * @property {() => void} countdown_finished
  *
  * @typedef {Object} ClientToServer
  * @property {ClientToServerEventNameToCbMap["create_room"]} create_room
@@ -57,6 +62,7 @@ import { MAX_USERNAME_LENGTH } from "./consts.mjs";
  * @property {ClientToServerEventNameToCbMap["send_message"]} send_message
  * @property {ClientToServerEventNameToCbMap["change_room_type"]} change_room_type
  * @property {ClientToServerEventNameToCbMap["change_max_players"]} change_max_players
+ * @property {ClientToServerEventNameToCbMap["start_game"]} start_game
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -68,6 +74,7 @@ class TypingGameServer {
 	 */
 	constructor(server) {
 		this.store = new InMemoryStore(server);
+		this.server = server;
 
 		server.use(this.middleware);
 		server.on("connection", this.onConnection.bind(this));
@@ -112,6 +119,69 @@ class TypingGameServer {
 		socket.on("change_max_players", (room_id, user_id, new_max, cb) => {
 			this.onChangeMaxPlayers(socket, room_id, user_id, new_max, cb);
 		});
+		socket.on("start_game", (room_id, user_id, cb) => {
+			this.onStartGame(socket, room_id, user_id, cb);
+		});
+		socket.onAny(this.logger.bind(this));
+	}
+
+	/**
+	 * @template {keyof ClientToServerEventNameToCbMap} K
+	 * @param {K} eventName
+	 * @param {Parameters<ClientToServerEventNameToCbMap[K]>} args
+	 */
+	logger(eventName, ...args) {
+		console.debug("Received event: ", eventName, "| Arguments: ", ...args);
+	}
+
+	/**
+	 * We have a cb to tell the client that we acknowledged their request, and sent this information to other connected clients in the room, so they all have the same starting points.
+	 * @param {Socket} socket
+	 * @param {string} room_id
+	 * @param {string} user_id
+	 * @param {CallbackAcknowledgement<undefined>} cb
+	 */
+	onStartGame(socket, room_id, user_id, cb) {
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			cb(500, undefined, "Internal Server Error");
+			console.error(
+				`Room with id ${room_id} not found in store when it tried to start the game.`,
+			);
+			return;
+		}
+
+		const user = this.store.getUser(user_id);
+
+		if (!user) {
+			cb(500, undefined, "Internal Server Error");
+			console.error(
+				`User with id ${user_id} not found in store when it tried to start the game.`,
+			);
+			return;
+		}
+
+		if (room.host_id !== user_id) {
+			cb(403, undefined, "You are not the host of this room.");
+			console.error(
+				`User with id ${user_id} tried to start the game in room with id ${room_id} but they are not the host.`,
+			);
+			return;
+		}
+
+		if (room.users.length < 2) {
+			cb(400, undefined, "There must be at least 2 players to start.");
+			console.error(
+				`User with id ${user_id} tried to start the game in room with id ${room_id} but there are not enough players.`,
+			);
+			return;
+		}
+
+		room.room_status = SOCKET_ROOM_STATUS.COUNTDOWN;
+		socket.to(room_id).emit("game_started");
+		cb(200, undefined, "Game started.");
+		this.store.startCountdown(room_id, COUNTDOWN_COUNT);
 	}
 
 	/**

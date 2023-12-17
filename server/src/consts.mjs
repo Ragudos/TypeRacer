@@ -8,3 +8,6 @@ export const mapRoomTypeToUserFriendly = {
 };
 
 export const MAX_USERNAME_LENGTH = 20;
+export const COUNTDOWN_COUNT = 10;
+export const COUNTDOWN_SPEED = 1000;
+
