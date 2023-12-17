@@ -4,6 +4,7 @@
 		"paths": {
 			"@/*": ["src/*"],
 			"@server/*": ["../server/src/*"]
-		}
+		},
+		"jsx": "react-jsx",
 	},
 }

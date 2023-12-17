@@ -84,6 +84,7 @@ export default function HomePage() {
 		setIsLoading(true);
 		const toastId = toast.loading("Connecting to server...");
 
+		// We use a promise because we need to turn off either of the listeners when either is fired.
 		new Promise((resolve, reject) => {
 			resolvePromise.current = resolve;
 			rejectPromise.current = reject;

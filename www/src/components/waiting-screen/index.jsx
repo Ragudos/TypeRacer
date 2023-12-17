@@ -6,6 +6,7 @@ import { mapRoomTypeToUserFriendly } from "@server/consts";
 
 const ChangeRoomType = React.lazy(() => import("./change-room-type"));
 const ChangeMaxPlayers = React.lazy(() => import("./change-max-players"));
+const StartGame = React.lazy(() => import("./start-game"));
 
 const WaitingScreen = React.memo(function () {
 	const { roomInfo } = useRoomInfo();
@@ -72,7 +73,16 @@ const WaitingScreen = React.memo(function () {
 				</ul>
 			</article>
 			<div>
-				{}
+				<hr />
+				{!isUserHost && (
+					<p>Waiting for the host to start the game...</p>
+				)}
+
+				{isUserHost && (
+					<React.Suspense fallback={<p>Waiting for players...</p>}>
+						<StartGame />
+					</React.Suspense>
+				)}
 			</div>
 		</div>
 	);

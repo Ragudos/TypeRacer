@@ -9,6 +9,7 @@ import { socket } from "../lib/socket";
  * @property {string} userId
  * @property {React.Dispatch<React.SetStateAction<string>>} setUsername
  * @property {React.Dispatch<React.SetStateAction<string>>} setAvatar
+ * @property {React.Dispatch<React.SetStateAction<string>>} setUserId must only be used when the user is disconnected and resetting the client state
  */
 
 /**
@@ -20,6 +21,7 @@ export const UserInfoContext = React.createContext({
 	userId: "",
 	setUsername: (_username) => {},
 	setAvatar: (_avatar) => {},
+	setUserId: (_userId) => {},
 });
 
 /**
@@ -57,6 +59,7 @@ export const UserInfoContextProvider = (props) => {
 				avatar,
 				setAvatar,
 				userId,
+				setUserId,	
 			}}
 		>
 			{props.children}

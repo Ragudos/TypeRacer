@@ -3,12 +3,18 @@ import { socket } from "./lib/socket";
 import useSocketConnection from "./hooks/useSocketConnection";
 import { SOCKET_ERRORS } from "../../server/src/enums.mjs";
 import { toast } from "react-hot-toast";
+import useRoomInfo from "./hooks/useRoomInfo";
+import useRoomId from "./hooks/useRoomId";
+import useUserInfo from "./hooks/useUserInfo";
 
 export default function ErrorCatcher() {
 	const { setIsConnected } = useSocketConnection();
+	const { setRoomInfo } = useRoomInfo();
+	const { setRoomId } = useRoomId();
+	const { setUserId, setUsername } = useUserInfo();
 
 	/**
-	 * @type {(error: { name: import("../../server/src/enums.mjs").SocketError, message: string }) => void}
+	 * @type {(error: { name: import("@server/enums.mjs").SocketError, message: string }) => void}
 	 */
 	const handleError = React.useCallback(
 		(error) => {
@@ -24,9 +30,16 @@ export default function ErrorCatcher() {
 				toast.error(error.message);
 				socket.disconnect();
 				setIsConnected(false);
+				setRoomInfo(undefined);
+				
+				const searchParams = new URLSearchParams(window.location.search);
+				const roomId = searchParams.get("roomId");
+				setRoomId(roomId);
+				setUserId("");
+				setUsername("");
 			}
 		},
-		[setIsConnected],
+		[setIsConnected, setRoomInfo, setRoomId, setUserId, setUsername],
 	);
 
 	React.useEffect(() => {
