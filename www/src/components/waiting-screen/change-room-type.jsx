@@ -1,20 +1,22 @@
 import { Arrow, Content, Root, Trigger } from "@radix-ui/react-popover";
-import useRoomInfo from "../hooks/useRoomInfo";
-import useUserInfo from "../hooks/useUserInfo";
-import { mapRoomTypeToUserFriendly } from "../consts";
-
-import "../styles/change-room-type.css";
-import { socket } from "../lib/socket";
 import { toast } from "react-hot-toast";
 import React from "react";
+
+import useRoomInfo from "@/hooks/useRoomInfo";
+import useUserInfo from "@/hooks/useUserInfo";
+
+import { mapRoomTypeToUserFriendly } from "@server/consts";
+import "@/styles/change-room-type.css";
+import { socket } from "@/lib/socket";
 
 export default function ChangeRoomType() {
 	const { roomInfo, setRoomInfo } = useRoomInfo();
 	const userInfo = useUserInfo();
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [isOpen, setIsOpen] = React.useState(false);
 
 	/**
-	 * @param {import("../../../server/src/enums.mjs").SocketRoomType} chosenType
+	 * @param {import("@server/enums.mjs").SocketRoomType} chosenType
 	 */
 	function selectType(chosenType) {
 		if (!roomInfo || !userInfo) {
@@ -62,7 +64,12 @@ export default function ChangeRoomType() {
 	}
 
 	return (
-		<Root>
+		<Root
+			open={isOpen}
+			onOpenChange={(currentState) => {
+				setIsOpen(currentState);
+			}}
+		>
 			<Trigger
 				className="btn-accent"
 				aria-label="Change who can join the room"
@@ -71,9 +78,8 @@ export default function ChangeRoomType() {
 			</Trigger>
 			<Content
 				style={{ zIndex: "20" }}
-				className="dialog__slideright"
-				sideOffset={10}
-				side="right"
+				className="dialog__slideup"
+				sideOffset={5}
 			>
 				<Arrow className="dialog-arrow" />
 				<div className="change-room-type__body">
@@ -84,6 +90,7 @@ export default function ChangeRoomType() {
 								name="room-type"
 								onClick={(e) => {
 									selectType(e.currentTarget.value);
+									setIsOpen(false);
 								}}
 								className="btn-accent change-room-type__btn"
 								value={key}

@@ -2,7 +2,7 @@ import React from "react";
 import HomePage from "./pages/home";
 import useSocketConnection from "./hooks/useSocketConnection";
 import { RoomInfoContextProvider } from "./contexts/room-info";
-import Loader from "./components/loader";
+import Loader from "./components/ui/loader";
 
 const GamePage = React.lazy(() => import("./pages/game"));
 

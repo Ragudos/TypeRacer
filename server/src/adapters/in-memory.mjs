@@ -78,6 +78,8 @@ class InMemoryStore {
 
 		this.chats.get(room_id)?.push(chat);
 
+		console.debug(`Added chat in room ${room_id}. Current state: `, this.chats);
+
 		return chat;
 	}
 
@@ -268,6 +270,7 @@ class InMemoryStore {
 
 		if (room.users.length === 1) {
 			this.deleteRoom(room_id);
+			this.deleteChat(room_id);
 
 			return;
 		}
@@ -296,6 +299,14 @@ class InMemoryStore {
 			`User ${user_id} left room ${room_id}. Current state: `,
 			this.rooms,
 		);
+	}
+
+	/**
+	 * @param {string} chat_id
+	 */
+	deleteChat(chat_id) {
+		this.chats.delete(chat_id);
+		console.log(`Deleted chat data in room ${chat_id}. Current state: `, this.chats);	
 	}
 
 	/**

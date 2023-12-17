@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/copy-box.css";
+import "@/styles/copy-box.css";
 
 /**
  * @param {Object} props

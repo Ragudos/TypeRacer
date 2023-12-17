@@ -1,12 +1,11 @@
-import { Root, Trigger, Content } from "@radix-ui/react-popover";
 import React from "react";
-import { socket } from "../lib/socket";
-import useRoomId from "../hooks/useRoomId";
-import useUserInfo from "../hooks/useUserInfo";
-import useRoomInfo from "../hooks/useRoomInfo";
+import { socket } from "@/lib/socket";
+import useRoomId from "@/hooks/useRoomId";
+import useUserInfo from "@/hooks/useUserInfo";
+import useRoomInfo from "@/hooks/useRoomInfo";
 
 /**
- * @typedef {import("../../../server/src/adapters/in-memory.mjs").Chat} Chat
+ * @typedef {import("@server/adapters/in-memory.mjs").Chat} Chat
  */
 
 const Chat = React.memo(function () {

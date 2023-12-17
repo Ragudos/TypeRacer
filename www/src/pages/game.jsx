@@ -1,15 +1,15 @@
 import React from "react";
-import useUserInfo from "../hooks/useUserInfo";
-import useRoomInfo from "../hooks/useRoomInfo";
-import { SOCKET_ROOM_STATUS } from "../../../server/src/enums.mjs";
-import WaitingScreen from "../components/waiting-screen";
-import Loader from "../components/loader.jsx";
-import "../styles/game.css";
-import Chat from "../components/chat.jsx";
+import useUserInfo from "@/hooks/useUserInfo";
+import useRoomInfo from "@/hooks/useRoomInfo";
+import { SOCKET_ROOM_STATUS } from "@server/enums.mjs";
+import WaitingScreen from "@/components/waiting-screen";
+import Loader from "@/components/ui/loader.jsx";
+import "@/styles/game.css";
+import Chat from "@/components/chat.jsx";
 
-const GameScreen = React.lazy(() => import("../components/game-screen"));
+const GameScreen = React.lazy(() => import("@/components/game-screen"));
 const CountdownScreen = React.lazy(
-	() => import("../components/countdown-screen"),
+	() => import("@/components/countdown-screen"),
 );
 
 export default function GamePage() {

@@ -1,8 +1,8 @@
 import React from "react";
-import useRoomInfo from "../hooks/useRoomInfo";
-import useUserInfo from "../hooks/useUserInfo";
-import CopyBox from "./copy-box";
-import { mapRoomTypeToUserFriendly } from "../consts";
+import useRoomInfo from "@/hooks/useRoomInfo";
+import useUserInfo from "@/hooks/useUserInfo";
+import CopyBox from "@/components/ui/copy-box";
+import { mapRoomTypeToUserFriendly } from "@server/consts";
 
 const ChangeRoomType = React.lazy(() => import("./change-room-type"));
 const ChangeMaxPlayers = React.lazy(() => import("./change-max-players"));
@@ -71,6 +71,9 @@ const WaitingScreen = React.memo(function () {
 					</li>
 				</ul>
 			</article>
+			<div>
+				{}
+			</div>
 		</div>
 	);
 });

@@ -1,11 +1,13 @@
 import React from "react";
-import useUserInfo from "../hooks/useUserInfo";
-import useSocketConnection from "../hooks/useSocketConnection";
-import useRoomId from "../hooks/useRoomId";
-import { socket } from "../lib/socket";
 import { toast } from "react-hot-toast";
-import useRoomInfo from "../hooks/useRoomInfo";
-import { MAX_USERNAME_LENGTH } from "../consts";
+
+import useRoomInfo from "@/hooks/useRoomInfo";
+import useUserInfo from "@/hooks/useUserInfo";
+import useSocketConnection from "@/hooks/useSocketConnection";
+import useRoomId from "@/hooks/useRoomId";
+import { socket } from "@/lib/socket";
+
+import { MAX_USERNAME_LENGTH } from "@server/consts";
 
 export default function HomePage() {
 	const { setIsConnected } = useSocketConnection();

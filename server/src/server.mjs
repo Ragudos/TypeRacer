@@ -3,7 +3,7 @@
 import { InMemoryStore } from "./adapters/in-memory.mjs";
 import { SOCKET_ERRORS, SOCKET_ROOM_TYPES } from "./enums.mjs";
 import { genRandomId } from "./lib/utils.mjs";
-import { MAX_USERNAME_LENGTH } from "../../www/src/consts.js";
+import { MAX_USERNAME_LENGTH } from "./consts.mjs";
 
 /**
  * @template T
@@ -26,6 +26,16 @@ import { MAX_USERNAME_LENGTH } from "../../www/src/consts.js";
  * @typedef {CallbackAcknowledgement<Room | undefined>} RoomCreationAcknowledgement
  * @typedef {CallbackAcknowledgement<Room | undefined>} RoomJoinAcknowledgement
  *
+ * @typedef {Object} ClientToServerEventNameToCbMap
+ * @property {(cb: RoomCreationAcknowledgement) => void} create_room
+ * @property {(room_id: string, cb: RoomJoinAcknowledgement)=> void} join_room
+ * @property {(room_id: string) => void} leave_room
+ * @property {(room_id: string, cb: CallbackAcknowledgement<Room | undefined>) => void} request_room_info
+ * @property {(room_id: string, cb: CallbackAcknowledgement<import("./adapters/in-memory.mjs").Chats | undefined>) => void} request_chats_in_room
+ * @property {(room_id: string, user_id: string, message: string, cb: CallbackAcknowledgement<Chat>) => void} send_message
+ * @property {(room_id: string, user_id: string, new_type: import("./enums.mjs").SocketRoomType, cb: CallbackAcknowledgement<undefined>) => void} change_room_type
+ * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
+ *
  * @typedef {Object} ServerToClient
  * @property {(error: { name: SocketError; message: string; }) => void} error
  * @property {(user: User) => void} user_joined
@@ -39,14 +49,14 @@ import { MAX_USERNAME_LENGTH } from "../../www/src/consts.js";
  * @property {(new_max: number) => void} max_players_changed
  *
  * @typedef {Object} ClientToServer
- * @property {(cb: RoomCreationAcknowledgement) => void} create_room
- * @property {(room_id: string, cb: RoomJoinAcknowledgement)=> void} join_room
- * @property {(room_id: string) => void} leave_room
- * @property {(room_id: string, cb: CallbackAcknowledgement<Room | undefined>) => void} request_room_info
- * @property {(room_id: string, cb: CallbackAcknowledgement<import("./adapters/in-memory.mjs").Chats | undefined>) => void} request_chats_in_room
- * @property {(room_id: string, user_id: string, message: string, cb: CallbackAcknowledgement<Chat>) => void} send_message
- * @property {(room_id: string, user_id: string, new_type: import("./enums.mjs").SocketRoomType, cb: CallbackAcknowledgement<undefined>) => void} change_room_type
- * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
+ * @property {ClientToServerEventNameToCbMap["create_room"]} create_room
+ * @property {ClientToServerEventNameToCbMap["join_room"]} join_room
+ * @property {ClientToServerEventNameToCbMap["leave_room"]} leave_room
+ * @property {ClientToServerEventNameToCbMap["request_room_info"]} request_room_info
+ * @property {ClientToServerEventNameToCbMap["request_chats_in_room"]} request_chats_in_room
+ * @property {ClientToServerEventNameToCbMap["send_message"]} send_message
+ * @property {ClientToServerEventNameToCbMap["change_room_type"]} change_room_type
+ * @property {ClientToServerEventNameToCbMap["change_max_players"]} change_max_players
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server

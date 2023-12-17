@@ -144,11 +144,20 @@ a {
 	justify-content: center;
 	gap: 0.5rem;
 
-	min-width: 7.5ch;
-	min-height: 5ch;
-	font-size: 0.875rem;
+	min-width: 6.5ch;
+	min-height: 4ch;
+	font-size: 0.75rem;
 }
 
+@media only screen and (min-width: 640px) {
+	button,
+	input[type=submit],
+	a {
+		min-width: 7.5ch;
+		min-height: 5ch;
+		font-size: 0.875rem;
+	}
+}
 
 button:focus-visible,
 input[type=submit]:focus-visible,
@@ -355,6 +364,10 @@ ul, ol {
 	animation: slide-left 0.175s ease-out;
 }
 
+.dialog__slideup {
+	animation: slide-up 0.175s ease-out;
+}
+
 @keyframes slide-right {
 	from {
 		opacity: 0;
@@ -374,6 +387,17 @@ ul, ol {
 	to {
 		opacity: 1;
 		transform: translateX(-5%);
+	}
+}
+
+@keyframes slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(5%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
 	}
 }
 

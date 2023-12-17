@@ -2,12 +2,12 @@
 
 import React from "react";
 import { toast } from "react-hot-toast";
-import useRoomInfo from "../hooks/useRoomInfo";
-import useUserInfo from "../hooks/useUserInfo";
-import { socket } from "../lib/socket";
 import { Root, Trigger, Content, Arrow } from "@radix-ui/react-popover";
+import useRoomInfo from "@/hooks/useRoomInfo";
+import useUserInfo from "@/hooks/useUserInfo";
+import { socket } from "@/lib/socket";
 
-import "../styles/change-max-players.css";
+import "@/styles/change-max-players.css";
 
 const arr = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -15,6 +15,7 @@ export default function ChangeMaxPlayers() {
 	const { roomInfo, setRoomInfo } = useRoomInfo();
 	const userInfo = useUserInfo();
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [isOpen, setIsOpen] = React.useState(false);
 
 	/**
 	 * @param {number} maxPlayers
@@ -65,7 +66,12 @@ export default function ChangeMaxPlayers() {
 	}
 
 	return (
-		<Root>
+		<Root
+			open={isOpen}
+			onOpenChange={(currentState) => {
+				setIsOpen(currentState);
+			}}
+		>
 			<Trigger
 				className="btn-accent"
 				aria-label="Change the maximum amount of players who can join the room"
@@ -73,10 +79,9 @@ export default function ChangeMaxPlayers() {
 				{roomInfo.max_users} players
 			</Trigger>
 			<Content
-				className="dialog__slideright"
+				className="dialog__slideup"
 				style={{ zIndex: "20" }}
-				sideOffset={10}
-				side="right"
+				sideOffset={5}
 			>
 				<Arrow className="dialog-arrow" />
 				<div className="change-max-players__body">
@@ -84,7 +89,10 @@ export default function ChangeMaxPlayers() {
 						<button
 							key={maxPlayers}
 							className="btn-accent"
-							onClick={() => selectMaxPlayers(maxPlayers)}
+							onClick={() => {
+								selectMaxPlayers(maxPlayers);
+								setIsOpen(false);
+							}}
 							aria-busy={isLoading}
 							disabled={roomInfo.max_users === maxPlayers}
 							aria-selected={roomInfo.max_users === maxPlayers}
