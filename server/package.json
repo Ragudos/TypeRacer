@@ -10,7 +10,10 @@
     "format": "prettier -w src"
   },
   "dependencies": {
+    "articles": "^0.2.2",
     "dotenv": "^16.3.1",
+    "natural": "^6.10.4",
+    "randy": "^1.5.1",
     "socket.io": "^4.7.2"
   },
   "devDependencies": {

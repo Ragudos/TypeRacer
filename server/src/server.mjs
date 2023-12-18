@@ -1,9 +1,17 @@
 // @ts-check
 
 import { InMemoryStore } from "./adapters/in-memory.mjs";
-import { SOCKET_ERRORS, SOCKET_ROOM_STATUS, SOCKET_ROOM_TYPES } from "./enums.mjs";
+import {
+	SOCKET_ERRORS,
+	SOCKET_ROOM_STATUS,
+	SOCKET_ROOM_TYPES,
+} from "./enums.mjs";
 import { genRandomId } from "./lib/utils.mjs";
-import { COUNTDOWN_COUNT, MAX_USERNAME_LENGTH } from "./consts.mjs";
+import {
+	COUNTDOWN_COUNT,
+	MAX_PLAYERS_IN_ROOM,
+	MAX_USERNAME_LENGTH,
+} from "./consts.mjs";
 
 /**
  * @template T
@@ -195,8 +203,12 @@ class TypingGameServer {
 		if (new_max < 2) {
 			cb(400, undefined, "Max players must be at least 2.");
 			return;
-		} else if (new_max > 6) {
-			cb(400, undefined, "Max players must be at most 6.");
+		} else if (new_max > MAX_PLAYERS_IN_ROOM) {
+			cb(
+				400,
+				undefined,
+				`Max players must be at most ${MAX_PLAYERS_IN_ROOM}.`,
+			);
 			return;
 		}
 

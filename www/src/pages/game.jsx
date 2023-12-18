@@ -39,7 +39,7 @@ export default function GamePage() {
 						<CountdownScreen />
 					</React.Suspense>
 				)}
-				{roomInfo.room_status === SOCKET_ROOM_STATUS.IN_PROGRESS && (
+				{roomInfo.room_status === SOCKET_ROOM_STATUS.PLAYING && (
 					<React.Suspense
 						fallback={
 							<Loader textToShow="Loading game screen..." />

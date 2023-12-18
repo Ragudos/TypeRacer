@@ -1,0 +1,12 @@
+
+.game-screen {
+	font-size: 1.25rem;
+	font-weight: 500;
+}
+
+.game-screen__text {
+	font-size: inherit;
+	text-align: justify;
+	opacity: 0.87;
+}
+

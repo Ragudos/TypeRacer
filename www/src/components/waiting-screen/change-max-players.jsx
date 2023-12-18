@@ -8,8 +8,9 @@ import useUserInfo from "@/hooks/useUserInfo";
 import { socket } from "@/lib/socket";
 
 import "@/styles/change-max-players.css";
+import { MAX_PLAYERS_IN_ROOM } from "@server/consts.mjs";
 
-const arr = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+const arr = new Array(MAX_PLAYERS_IN_ROOM - 1).fill(0).map((_, i) => i + 2);
 
 export default function ChangeMaxPlayers() {
 	const { roomInfo, setRoomInfo } = useRoomInfo();

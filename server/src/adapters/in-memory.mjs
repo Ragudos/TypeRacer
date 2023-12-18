@@ -3,6 +3,7 @@
 import { Timer } from "../Timer.mjs";
 import { COUNTDOWN_SPEED } from "../consts.mjs";
 import { SOCKET_ROOM_TYPES, SOCKET_ROOM_STATUS } from "../enums.mjs";
+import { generate_sentence } from "../lib/random-sentence.mjs";
 import { genRandomId } from "../lib/utils.mjs";
 
 const MAX_ALLOWED_ROOMS = 1;
@@ -18,6 +19,7 @@ const MAX_ALLOWED_ROOMS = 1;
  * @property {number} max_users
  * @property {import("../enums.mjs").SocketRoomType} room_type
  * @property {import("../enums.mjs").SocketRoomStatus} room_status
+ * @property {string} paragraph_to_type
  *
  * @typedef {Object} User
  * @property {string} user_id
@@ -70,35 +72,44 @@ class InMemoryStore {
 	 * @param {number} duration in seconds
 	 */
 	startCountdown(room_id, duration) {
-		const timer = new Timer(COUNTDOWN_SPEED, duration, (currentTick, isFinished) => {
-			if (currentTick != undefined) {
-				this.server.to(room_id).emit("countdown", currentTick);
-			}
+		const timer = new Timer(
+			COUNTDOWN_SPEED,
+			duration,
+			(currentTick, isFinished) => {
+				if (currentTick != undefined) {
+					this.server.to(room_id).emit("countdown", currentTick);
+				}
 
-			if (!isFinished) {
-				return;
-			}
+				if (!isFinished) {
+					return;
+				}
 
-			this.timers.delete(room_id);
-			this.server.to(room_id).emit("countdown_finished");
-			console.debug(
-				`Countdown timer finished in room ${room_id}. Current state: `,
-				this.timers,
-			);
-	
-			const room = this.getRoom(room_id);
+				this.timers.delete(room_id);
+				this.server.to(room_id).emit("countdown_finished");
+				console.debug(
+					`Countdown timer finished in room ${room_id}. Current state: `,
+					this.timers,
+				);
 
-			if (!room) {
-				console.error(`Room ${room_id} not found when countdown has finished.`);
-				return;
-			}
+				const room = this.getRoom(room_id);
 
-			room.room_status = SOCKET_ROOM_STATUS.PLAYING;
-		});
+				if (!room) {
+					console.error(
+						`Room ${room_id} not found when countdown has finished.`,
+					);
+					return;
+				}
+
+				room.room_status = SOCKET_ROOM_STATUS.PLAYING;
+			},
+		);
 
 		this.timers.set(room_id, timer);
 		timer.start();
-		console.debug(`Started countdown in room ${room_id}. Current state: `, this.timers);
+		console.debug(
+			`Started countdown in room ${room_id}. Current state: `,
+			this.timers,
+		);
 	}
 
 	/**
@@ -122,12 +133,14 @@ class InMemoryStore {
 		const chats = this.chats.get(room_id);
 
 		if (!chats) {
-			console.error(`Chats for room ${room_id} not found despite creating one.`);
+			console.error(
+				`Chats for room ${room_id} not found despite creating one.`,
+			);
 			return chat;
 		}
 
 		chats.push(chat);
-		
+
 		if (chats.length > 10) {
 			chats.shift();
 		}
@@ -313,11 +326,14 @@ class InMemoryStore {
 	 */
 	cleanup(room_id) {
 		const timer = this.timers.get(room_id);
-		
+
 		if (timer) {
 			timer.stop();
 			this.timers.delete(room_id);
-			console.log(`Deleted timer in room ${room_id} for cleanup. Current state: `, this.timers);
+			console.log(
+				`Deleted timer in room ${room_id} for cleanup. Current state: `,
+				this.timers,
+			);
 		}
 
 		this.deleteChat(room_id);
@@ -368,11 +384,18 @@ class InMemoryStore {
 		socket.leave(room_id);
 		this.server.to(room_id).emit("user_left", user, room.host_id);
 
-		if (room.users.length === 1 && room.room_status != SOCKET_ROOM_STATUS.WAITING && room.room_status != SOCKET_ROOM_STATUS.RESULTS) {
+		if (
+			room.users.length === 1 &&
+			room.room_status != SOCKET_ROOM_STATUS.WAITING &&
+			room.room_status != SOCKET_ROOM_STATUS.RESULTS
+		) {
 			if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
 				this.timers.get(room_id)?.stop();
 				this.timers.delete(room_id);
-				console.log(`Deleted timer in room ${room_id} when resetting a room. Current state: `, this.timers);
+				console.log(
+					`Deleted timer in room ${room_id} when resetting a room. Current state: `,
+					this.timers,
+				);
 			}
 
 			room.room_status = SOCKET_ROOM_STATUS.WAITING;
@@ -442,6 +465,7 @@ class InMemoryStore {
 				max_users: 2,
 				room_type,
 				room_status: SOCKET_ROOM_STATUS.WAITING,
+				paragraph_to_type: await generate_sentence()
 			};
 
 			this.rooms.set(room_id, room);

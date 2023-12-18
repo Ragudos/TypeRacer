@@ -92,7 +92,7 @@ export class Timer {
 	 */
 	constructor(delay, ticks, cb) {
 		if (this.ticks && this.ticks < 1) {
-			console.error('Timer ticks must be greater than 0');
+			console.error("Timer ticks must be greater than 0");
 			this.ticks = 1;
 		}
 
@@ -148,7 +148,10 @@ export class Timer {
 				this.stop();
 			}
 
-			this.cb(this.ticks, this.ticks != undefined ? this.ticks === 0 : undefined);
+			this.cb(
+				this.ticks,
+				this.ticks != undefined ? this.ticks === 0 : undefined,
+			);
 		}, this.delay);
 	}
 
