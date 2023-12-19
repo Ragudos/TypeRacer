@@ -16,10 +16,6 @@ export default function GamePage() {
 	const { roomInfo } = useRoomInfo();
 	const userInfo = useUserInfo();
 
-	React.useEffect(() => {
-		console.table("Room Info: ", roomInfo, "User Info: ", userInfo);
-	}, [roomInfo, userInfo]);
-
 	if (!roomInfo) {
 		return null;
 	}

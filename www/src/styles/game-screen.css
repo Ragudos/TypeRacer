@@ -4,9 +4,41 @@
 	font-weight: 500;
 }
 
+.game-screen__text[data-caret-style=flat] {
+	box-sizing: content-box;
+}
+
 .game-screen__text {
 	font-size: inherit;
-	text-align: justify;
-	opacity: 0.87;
+
+	user-select: none;
+	touch-action: none;
+	font-family: monospace;
+}
+
+.game-screen__text__undone {
+	opacity: 0.5;
+}
+
+.game-screen__text__input {
+	opacity: 0.97;
+}
+
+.game-screen__text__input[data-error=true] {
+	color: hsl(var(--destructive));
+}
+
+.game-screen__text__current {
+	background-color: hsl(var(--accent));
+	opacity: 0.5;
+}
+
+.game-screen__text[data-caret-style=flat] .game-screen__text__current {
+	background-color: transparent;
+	border-left: 0.175rem solid hsl(var(--accent));
+}
+
+.game-screen__text__done {
+	opacity: 0.97;
 }
 
