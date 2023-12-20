@@ -2,7 +2,11 @@
 
 import { Timer } from "../Timer.mjs";
 import { COUNTDOWN_SPEED } from "../consts.mjs";
-import { SOCKET_ROOM_TYPES, SOCKET_ROOM_STATUS } from "../enums.mjs";
+import {
+	SOCKET_ROOM_TYPES,
+	SOCKET_ROOM_STATUS,
+	TIMER_SUFFIXES,
+} from "../enums.mjs";
 import { generate_sentence } from "../lib/random-sentence.mjs";
 import { genRandomId } from "../lib/utils.mjs";
 
@@ -11,6 +15,11 @@ const MAX_ALLOWED_ROOMS = 1;
 /**
  * @global
  *
+ * @typedef {Object} Progress
+ * @property {string} typed_word
+ * @property {number} progress
+ * @property {number} wpm
+ * @property {number} accuracy
  *
  * @typedef {Object} Room
  * @property {string} room_id
@@ -25,6 +34,7 @@ const MAX_ALLOWED_ROOMS = 1;
  * @property {string} user_id
  * @property {string} username
  * @property {string} avatar
+ * @property {boolean} is_finished
  *
  * @typedef {Object} Chat
  * @property {string} user_id
@@ -70,41 +80,14 @@ class InMemoryStore {
 	/**
 	 * @param {string} room_id
 	 * @param {number} duration in seconds
+	 * @param {import("../enums.mjs").TimerSuffix} id_suffix
+	 * @param {(currentTick: number | undefined, isFinished: boolean | undefined) => void} operation
 	 */
-	startCountdown(room_id, duration) {
-		const timer = new Timer(
-			COUNTDOWN_SPEED,
-			duration,
-			(currentTick, isFinished) => {
-				if (currentTick != undefined) {
-					this.server.to(room_id).emit("countdown", currentTick);
-				}
+	startCountdown(room_id, duration, id_suffix, operation) {
+		const id = room_id + id_suffix;
+		const timer = new Timer(COUNTDOWN_SPEED, duration, operation);
 
-				if (!isFinished) {
-					return;
-				}
-
-				this.timers.delete(room_id);
-				this.server.to(room_id).emit("countdown_finished");
-				console.debug(
-					`Countdown timer finished in room ${room_id}. Current state: `,
-					this.timers,
-				);
-
-				const room = this.getRoom(room_id);
-
-				if (!room) {
-					console.error(
-						`Room ${room_id} not found when countdown has finished.`,
-					);
-					return;
-				}
-
-				room.room_status = SOCKET_ROOM_STATUS.PLAYING;
-			},
-		);
-
-		this.timers.set(room_id, timer);
+		this.timers.set(id, timer);
 		timer.start();
 		console.debug(
 			`Started countdown in room ${room_id}. Current state: `,
@@ -154,20 +137,42 @@ class InMemoryStore {
 	}
 
 	/**
-	 * @param {string} room_id
-	 */
-	getChats(room_id) {
-		return this.chats.get(room_id);
-	}
-
-	/**
 	 * @param {string} user_id
 	 * @param {string} username
 	 * @param {string} avatar
 	 */
 	addUser(user_id, username, avatar) {
-		this.users.set(user_id, { user_id, username, avatar });
+		this.users.set(user_id, { user_id, username, avatar, is_finished: false });
 		console.debug(`Added user ${user_id}. Current state: `, this.users);
+	}
+
+	/**
+	 * Deletes all related storage of a room.
+	 * @param {string} room_id
+	 */
+	cleanup(room_id) {
+		for (const timer_suffix_key in TIMER_SUFFIXES) {
+			const timer_suffix = TIMER_SUFFIXES[timer_suffix_key];
+			const timer_id = room_id + timer_suffix;
+			const timer = this.getTimer(timer_id);
+
+			if (!timer) {
+				continue;
+			}
+
+			timer.stop();
+			this.deleteTimer(timer_id);
+		}
+
+		this.deleteChat(room_id);
+		this.deleteRoom(room_id);
+	}
+
+	/**
+	 * @param {string} room_id
+	 */
+	getChats(room_id) {
+		return this.chats.get(room_id);
 	}
 
 	/**
@@ -184,6 +189,48 @@ class InMemoryStore {
 	 */
 	getUser(user_id) {
 		return this.users.get(user_id);
+	}
+
+	/**
+	 * @param {string} timer_id
+	 */
+	getTimer(timer_id) {
+		return this.timers.get(timer_id);
+	}
+
+	/**
+	 * @param {string} timer_id
+	 */
+	deleteTimer(timer_id) {
+		this.timers.delete(timer_id);
+		console.log(`Deleted timer ${timer_id}. Current state: `, this.timers);
+	}
+
+	/**
+	 * @param {string} chat_id
+	 */
+	deleteChat(chat_id) {
+		this.chats.delete(chat_id);
+		console.log(
+			`Deleted chat data in room ${chat_id}. Current state: `,
+			this.chats,
+		);
+	}
+
+	/**
+	 * @param {string} room_id
+	 */
+	deleteRoom(room_id) {
+		this.rooms.delete(room_id);
+		console.log(`Deleted room ${room_id}. Current state: `, this.rooms);
+	}
+
+	/**
+	 * @param {string} user_id
+	 */
+	deleteUser(user_id) {
+		this.users.delete(user_id);
+		console.log(`Deleted user ${user_id}. Current state: `, this.users);
 	}
 
 	/**
@@ -321,26 +368,6 @@ class InMemoryStore {
 	}
 
 	/**
-	 * Deletes all related storage of a room.
-	 * @param {string} room_id
-	 */
-	cleanup(room_id) {
-		const timer = this.timers.get(room_id);
-
-		if (timer) {
-			timer.stop();
-			this.timers.delete(room_id);
-			console.log(
-				`Deleted timer in room ${room_id} for cleanup. Current state: `,
-				this.timers,
-			);
-		}
-
-		this.deleteChat(room_id);
-		this.deleteRoom(room_id);
-	}
-
-	/**
 	 * @param {import("../server.mjs").Socket} socket
 	 * @param {string} user_id
 	 * @param {string} room_id
@@ -389,13 +416,17 @@ class InMemoryStore {
 			room.room_status != SOCKET_ROOM_STATUS.WAITING &&
 			room.room_status != SOCKET_ROOM_STATUS.RESULTS
 		) {
-			if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
-				this.timers.get(room_id)?.stop();
-				this.timers.delete(room_id);
-				console.log(
-					`Deleted timer in room ${room_id} when resetting a room. Current state: `,
-					this.timers,
-				);
+			let timer_id;
+
+			if (room.room_status === SOCKET_ROOM_STATUS.PLAYING) {
+				timer_id = room_id + TIMER_SUFFIXES.GAME;
+			} else if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
+				timer_id = room_id + TIMER_SUFFIXES.COUNTDOWN;
+			}
+
+			if (timer_id) {
+				this.getTimer(timer_id)?.stop();
+				this.deleteTimer(timer_id);
 			}
 
 			room.room_status = SOCKET_ROOM_STATUS.WAITING;
@@ -406,33 +437,6 @@ class InMemoryStore {
 			`User ${user_id} left room ${room_id}. Current state: `,
 			this.rooms,
 		);
-	}
-
-	/**
-	 * @param {string} chat_id
-	 */
-	deleteChat(chat_id) {
-		this.chats.delete(chat_id);
-		console.log(
-			`Deleted chat data in room ${chat_id}. Current state: `,
-			this.chats,
-		);
-	}
-
-	/**
-	 * @param {string} room_id
-	 */
-	deleteRoom(room_id) {
-		this.rooms.delete(room_id);
-		console.log(`Deleted room ${room_id}. Current state: `, this.rooms);
-	}
-
-	/**
-	 * @param {string} user_id
-	 */
-	deleteUser(user_id) {
-		this.users.delete(user_id);
-		console.log(`Deleted user ${user_id}. Current state: `, this.users);
 	}
 
 	/**
@@ -465,7 +469,7 @@ class InMemoryStore {
 				max_users: 2,
 				room_type,
 				room_status: SOCKET_ROOM_STATUS.WAITING,
-				paragraph_to_type: await generate_sentence()
+				paragraph_to_type: await generate_sentence(),
 			};
 
 			this.rooms.set(room_id, room);

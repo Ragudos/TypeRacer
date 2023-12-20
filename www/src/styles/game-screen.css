@@ -10,10 +10,10 @@
 
 .game-screen__text {
 	font-size: inherit;
+	font-family: monospace;
 
 	user-select: none;
 	touch-action: none;
-	font-family: monospace;
 }
 
 .game-screen__text__undone {

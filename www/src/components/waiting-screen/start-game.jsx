@@ -14,42 +14,48 @@ export default function StartGame() {
 		if (!userInfo || !roomId) {
 			return;
 		}
-		
+
 		if (roomInfo?.users.length < 2) {
 			toast.error("You need at least 2 players to start the game.");
 			return;
 		}
 
-		// We dont need to use a Promise because we are not 
-		socket.emit("start_game", roomId, userInfo.userId, (status, _data, message) => {
-			if (status != 200) {
-				toast.error(message);
-				console.error(message);
-				return;
-			}
-
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
+		// We dont need to use a Promise because we are not
+		socket.emit(
+			"start_game",
+			roomId,
+			userInfo.userId,
+			(status, _data, message) => {
+				if (status != 200) {
+					toast.error(message);
+					console.error(message);
+					return;
 				}
 
-				return {
-					...prevRoomInfo,
-					room_status: SOCKET_ROOM_STATUS.COUNTDOWN
-				};
-			});
-		});
+				setRoomInfo((prevRoomInfo) => {
+					if (!prevRoomInfo) {
+						return undefined;
+					}
+
+					return {
+						...prevRoomInfo,
+						room_status: SOCKET_ROOM_STATUS.COUNTDOWN,
+					};
+				});
+			},
+		);
 	}
 
 	return (
-		<button	
+		<button
 			type="button"
 			className="btn-primary start-game__button"
 			onClick={startGame}
 			disabled={roomInfo?.users.length < 2}
 		>
-			{roomInfo?.users.length < 2 ? "Waiting for players..." : "Start Game"}
+			{roomInfo?.users.length < 2
+				? "Waiting for players..."
+				: "Start Game"}
 		</button>
 	);
 }
-

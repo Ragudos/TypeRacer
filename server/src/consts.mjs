@@ -11,3 +11,4 @@ export const MAX_USERNAME_LENGTH = 20;
 export const COUNTDOWN_COUNT = 10;
 export const COUNTDOWN_SPEED = 1000;
 export const MAX_PLAYERS_IN_ROOM = 6;
+export const RACE_TIMER_COUNT = 180;

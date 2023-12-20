@@ -103,54 +103,58 @@ export const RoomInfoContextProvider = (props) => {
 		});
 	}, []);
 
-	const resetRoom = React.useCallback(
-		() => {
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
-				}
+	const resetRoom = React.useCallback(() => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
 
-				return {
-					...prevRoomInfo,
-					room_status: SOCKET_ROOM_STATUS.WAITING
-				};
-			});
-			toast("Resetting room since you are the only one left.");
-		},
-		[]
-	);
+			return {
+				...prevRoomInfo,
+				room_status: SOCKET_ROOM_STATUS.WAITING,
+			};
+		});
+		toast("Resetting room since you are the only one left.");
+	}, []);
 
-	const gameStarted = React.useCallback(
-		() => {
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
-				}
+	const gameStarted = React.useCallback(() => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
 
-				return {
-					...prevRoomInfo,
-					room_status: SOCKET_ROOM_STATUS.COUNTDOWN
-				};
-			});
-		},
-		[]
-	);
+			return {
+				...prevRoomInfo,
+				room_status: SOCKET_ROOM_STATUS.COUNTDOWN,
+			};
+		});
+	}, []);
 
-	const countdownFinished = React.useCallback(
-		() => {
-			setRoomInfo((prevRoomInfo) => {
-				if (!prevRoomInfo) {
-					return undefined;
-				}
+	const countdownFinished = React.useCallback(() => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
 
-				return {
-					...prevRoomInfo,
-					room_status: SOCKET_ROOM_STATUS.PLAYING
-				};
-			});
-		},
-		[]
-	);
+			return {
+				...prevRoomInfo,
+				room_status: SOCKET_ROOM_STATUS.PLAYING,
+			};
+		});
+	}, []);
+
+	const raceFinished = React.useCallback(() => {
+		setRoomInfo((prevRoomInfo) => {
+			if (!prevRoomInfo) {
+				return undefined;
+			}
+
+			return {
+				...prevRoomInfo,
+				room_status: SOCKET_ROOM_STATUS.RESULTS,
+			};
+		});
+	}, []);
 
 	React.useEffect(() => {
 		socket.on("max_players_changed", receiveMaxPlayersChanged);
@@ -161,6 +165,7 @@ export const RoomInfoContextProvider = (props) => {
 		socket.on("reset_room", resetRoom);
 		socket.on("game_started", gameStarted);
 		socket.on("countdown_finished", countdownFinished);
+		socket.on("race_finished", raceFinished);
 		return () => {
 			socket.off("max_players_changed", receiveMaxPlayersChanged);
 			socket.off("room_type_changed", receiveRoomTypeChanged);
@@ -170,6 +175,7 @@ export const RoomInfoContextProvider = (props) => {
 			socket.off("reset_room", resetRoom);
 			socket.off("game_started", gameStarted);
 			socket.off("countdown_finished", countdownFinished);
+			socket.off("race_finished", raceFinished);
 		};
 	}, [
 		onUserJoined,
@@ -179,6 +185,7 @@ export const RoomInfoContextProvider = (props) => {
 		resetRoom,
 		gameStarted,
 		countdownFinished,
+		raceFinished,
 	]);
 
 	return (

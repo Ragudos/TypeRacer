@@ -59,7 +59,7 @@ export const UserInfoContextProvider = (props) => {
 				avatar,
 				setAvatar,
 				userId,
-				setUserId,	
+				setUserId,
 			}}
 		>
 			{props.children}

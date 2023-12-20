@@ -108,16 +108,16 @@ function turn_num_string_into_number(string) {
  * @param {size} [size] Size of the paragraph to be generated.
  */
 export async function generate_sentence(size) {
-	const sentence_length = size || randy.randInt(3, 10);
+	const sentence_length = size || randy.randInt(1, 4);
 	let paragraph = "";
 
 	for (let idx = 0; idx < sentence_length; ++idx) {
 		const phrase = Math.random() < 0.25 ? `${randy.choice(phrases)} ` : "";
 		const template = await random_sentence(randy.choice(templates));
 		const sentence =
-			(capitalize(phrase + template) + ".") + (idx === sentence_length - 1
-				? ""
-				: " ");
+			capitalize(phrase + template) +
+			"." +
+			(idx === sentence_length - 1 ? "" : " ");
 		paragraph += sentence;
 	}
 

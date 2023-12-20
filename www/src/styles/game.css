@@ -2,15 +2,18 @@
 	display: grid;
 	gap: 1rem;
 	grid-template-areas: 
+		"list-of-progress"
 		"main-screen"
 		"chat-box"
 		"list-of-players";
+	margin-top: 1rem;
 }
 
 @media only screen and (min-width: 768px) {
 	.game-grid {
 		grid-template-columns: 1fr 1fr 1fr;
-		grid-template-areas: 
+		grid-template-areas:
+			"list-of-progress list-of-progress list-of-progress"
 			"main-screen main-screen main-screen"
 			"chat-box chat-box list-of-players"
 	}
@@ -19,14 +22,19 @@
 @media only screen and (min-width: 1536px) {
 	.game-grid {
 		grid-template-columns: 25% 2fr 1fr;
-		grid-template-areas: 
+		grid-template-areas:
+			"list-of-progress list-of-progress list-of-progress"
 			"chat-box main-screen list-of-players"
 	}
 }
 
 .main-screen {
 	grid-area: main-screen;
-	min-height: 15rem;
+}
+
+.list-of-progress {
+	grid-area: list-of-progress;
+	border: none !important;
 }
 
 .game-grid > * {
@@ -34,8 +42,9 @@
 	border-radius: var(--radius);
 	padding: 0.5rem;
 	background-color: hsl(var(--background));
-	border: 1px inset;
 	height: fit-content;
+
+	border: 1px solid;
 }
 
 @media only screen and (min-width: 768px) {
@@ -103,5 +112,18 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
+}
+
+.list-of-progress {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1rem;
+}
+
+.list-of-progress__child > small {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+	color: hsl(var(--accent));
 }
 

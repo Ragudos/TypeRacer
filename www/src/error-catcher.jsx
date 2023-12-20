@@ -31,8 +31,10 @@ export default function ErrorCatcher() {
 				socket.disconnect();
 				setIsConnected(false);
 				setRoomInfo(undefined);
-				
-				const searchParams = new URLSearchParams(window.location.search);
+
+				const searchParams = new URLSearchParams(
+					window.location.search,
+				);
 				const roomId = searchParams.get("roomId");
 				setRoomId(roomId);
 				setUserId("");

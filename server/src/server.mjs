@@ -5,12 +5,14 @@ import {
 	SOCKET_ERRORS,
 	SOCKET_ROOM_STATUS,
 	SOCKET_ROOM_TYPES,
+	TIMER_SUFFIXES,
 } from "./enums.mjs";
 import { genRandomId } from "./lib/utils.mjs";
 import {
 	COUNTDOWN_COUNT,
 	MAX_PLAYERS_IN_ROOM,
 	MAX_USERNAME_LENGTH,
+	RACE_TIMER_COUNT,
 } from "./consts.mjs";
 
 /**
@@ -44,6 +46,7 @@ import {
  * @property {(room_id: string, user_id: string, new_type: import("./enums.mjs").SocketRoomType, cb: CallbackAcknowledgement<undefined>) => void} change_room_type
  * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
  * @property {(room_id: string, user_id: string, cb: CallbackAcknowledgement<undefined>) => void} start_game
+ * @property {(room_id: string, user_id: string, progress: import("./adapters/in-memory.mjs").Progress, is_finished: boolean) => void} send_progress
  *
  * @typedef {Object} ServerToClient
  * @property {(error: { name: SocketError; message: string; }) => void} error
@@ -57,9 +60,12 @@ import {
  * @property {(new_type: import("./enums.mjs").SocketRoomType) => void} room_type_changed
  * @property {(new_max: number) => void} max_players_changed
  * @property {() => void} game_started
- * @property {(currentTick: number) => void} countdown
+ * @property {(current_tick: number) => void} countdown
  * @property {() => void} reset_room
  * @property {() => void} countdown_finished
+ * @property {(user_id: string, progress: import("./adapters/in-memory.mjs").Progress) => void} send_user_progress
+ * @property {(current_tick: number) => void} race_time_left
+ * @property {() => void} race_finished
  *
  * @typedef {Object} ClientToServer
  * @property {ClientToServerEventNameToCbMap["create_room"]} create_room
@@ -71,6 +77,7 @@ import {
  * @property {ClientToServerEventNameToCbMap["change_room_type"]} change_room_type
  * @property {ClientToServerEventNameToCbMap["change_max_players"]} change_max_players
  * @property {ClientToServerEventNameToCbMap["start_game"]} start_game
+ * @property {ClientToServerEventNameToCbMap["send_progress"]} send_progress
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -130,7 +137,53 @@ class TypingGameServer {
 		socket.on("start_game", (room_id, user_id, cb) => {
 			this.onStartGame(socket, room_id, user_id, cb);
 		});
+		socket.on("send_progress", this.onSendProgress.bind(this));
 		socket.onAny(this.logger.bind(this));
+	}
+
+	/**
+	 * @param {string} room_id
+	 * @param {string} user_id
+	 * @param {import("./adapters/in-memory.mjs").Progress} progress
+	 * @param {boolean} is_finished
+	 */
+	onSendProgress(room_id, user_id, progress, is_finished) {
+		this.server.to(room_id).emit("send_user_progress", user_id, progress);
+
+		if (!is_finished) {
+			return;
+		}
+
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(
+				`Room with id ${room_id} not found in store when a user sent progress.`,
+			);
+			return;
+		}
+
+		const user = room.users.find((user) => user.user_id === user_id);
+
+		if (!user) {
+			console.error(
+				`User with id ${user_id} not found in room with id ${room_id} when a user sent progress.`,
+			);
+			return;
+		}
+
+		user.is_finished = true;
+
+		const is_everyone_finished = room.users.every((user) => user.is_finished);
+
+		if (is_everyone_finished) {
+			this.server.to(room_id).emit("race_finished");
+			
+			const timer_id = room_id + TIMER_SUFFIXES.GAME;
+
+			this.store.getTimer(timer_id)?.stop();
+			this.store.deleteTimer(timer_id);
+		}
 	}
 
 	/**
@@ -140,6 +193,51 @@ class TypingGameServer {
 	 */
 	logger(eventName, ...args) {
 		console.debug("Received event: ", eventName, "| Arguments: ", ...args);
+	}
+
+	/**
+	 * @param {string} room_id
+	 */
+	startTimerOnRace(room_id) {
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(
+				`Room with id ${room_id} not found in store when a game started after its countdown.`,
+			);
+			return;
+		}
+
+		this.store.startCountdown(
+			room_id,
+			RACE_TIMER_COUNT,
+			TIMER_SUFFIXES.GAME,
+			(currentTick, isFinished) => {
+				const id = room_id + TIMER_SUFFIXES.GAME;
+
+				if (currentTick != undefined) {
+					this.server.to(room_id).emit("race_time_left", currentTick);
+				}
+
+				if (!isFinished) {
+					return;
+				}
+
+				this.store.deleteTimer(id);
+				this.server.to(room_id).emit("race_finished");
+
+				const room = this.store.getRoom(room_id);
+
+				if (!room) {
+					console.error(
+						`Room with id ${room_id} not found in store when a race finished.`,
+					);
+					return;
+				}
+
+				room.room_type = SOCKET_ROOM_TYPES.FINISHED;
+			},
+		);
 	}
 
 	/**
@@ -189,7 +287,36 @@ class TypingGameServer {
 		room.room_status = SOCKET_ROOM_STATUS.COUNTDOWN;
 		socket.to(room_id).emit("game_started");
 		cb(200, undefined, "Game started.");
-		this.store.startCountdown(room_id, COUNTDOWN_COUNT);
+		this.store.startCountdown(
+			room_id,
+			COUNTDOWN_COUNT,
+			TIMER_SUFFIXES.COUNTDOWN,
+			(currentTick, isFinished) => {
+				const id = room_id + TIMER_SUFFIXES.COUNTDOWN;
+				if (currentTick != undefined) {
+					this.server.to(room_id).emit("countdown", currentTick);
+				}
+
+				if (!isFinished) {
+					return;
+				}
+
+				this.store.deleteTimer(id);
+				this.server.to(room_id).emit("countdown_finished");
+
+				const room = this.store.getRoom(room_id);
+
+				if (!room) {
+					console.error(
+						`Room ${room_id} not found when countdown has finished.`,
+					);
+					return;
+				}
+
+				room.room_status = SOCKET_ROOM_STATUS.PLAYING;
+				this.startTimerOnRace(room_id);
+			},
+		);
 	}
 
 	/**

@@ -25,11 +25,17 @@ const SOCKET_ROOM_STATUS = /** @type {const} */ ({
 	RESULTS: "results",
 });
 
+const TIMER_SUFFIXES = /** @type {const} */ ({
+	COUNTDOWN: "-countdown",
+	GAME: "-game",
+});
+
 /**
  * @global
  * @typedef {typeof SOCKET_ERRORS[keyof typeof SOCKET_ERRORS]} SocketError
  * @typedef {typeof SOCKET_ROOM_TYPES[keyof typeof SOCKET_ROOM_TYPES]} SocketRoomType
  * @typedef {typeof SOCKET_ROOM_STATUS[keyof typeof SOCKET_ROOM_STATUS]} SocketRoomStatus
+ * @typedef {typeof TIMER_SUFFIXES[keyof typeof TIMER_SUFFIXES]} TimerSuffix
  */
 
-export { SOCKET_ERRORS, SOCKET_ROOM_TYPES, SOCKET_ROOM_STATUS };
+export { SOCKET_ERRORS, SOCKET_ROOM_TYPES, SOCKET_ROOM_STATUS, TIMER_SUFFIXES };
