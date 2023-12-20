@@ -1,6 +1,7 @@
 import useRaceTime from "@/hooks/useRaceTime";
 import useRoomInfo from "@/hooks/useRoomInfo";
 import React from "react";
+import { SOCKET_ROOM_STATUS } from "@server/enums.mjs";
 
 const Timer = React.memo(() => {
 	const { roomInfo } = useRoomInfo();
@@ -15,10 +16,10 @@ const Timer = React.memo(() => {
 
 	return (
 		<div className="race-timer">
-			{roomInfo.game_finished && (
+			{roomInfo.room_status === SOCKET_ROOM_STATUS.RESULTS && (
 				<div>Game finished.</div>
 			)}
-			{!roomInfo.game_fininshed && (
+			{roomInfo.room_status === SOCKET_ROOM_STATUS.PLAYING && (
 				<time>{timeInFriendlyFormat}</time>
 			)}
 		</div>
