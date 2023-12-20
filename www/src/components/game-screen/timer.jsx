@@ -1,7 +1,9 @@
 import useRaceTime from "@/hooks/useRaceTime";
+import useRoomInfo from "@/hooks/useRoomInfo";
 import React from "react";
 
 const Timer = React.memo(() => {
+	const { roomInfo } = useRoomInfo();
 	const time = useRaceTime();
 
 	const timeInFriendlyFormat = React.useMemo(() => {
@@ -13,7 +15,12 @@ const Timer = React.memo(() => {
 
 	return (
 		<div className="race-timer">
-			<time>{timeInFriendlyFormat}</time>
+			{roomInfo.game_finished && (
+				<div>Game finished.</div>
+			)}
+			{!roomInfo.game_fininshed && (
+				<time>{timeInFriendlyFormat}</time>
+			)}
 		</div>
 	);
 });

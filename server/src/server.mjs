@@ -183,6 +183,8 @@ class TypingGameServer {
 
 			this.store.getTimer(timer_id)?.stop();
 			this.store.deleteTimer(timer_id);
+
+			room.room_status = SOCKET_ROOM_STATUS.RESULTS;
 		}
 	}
 
@@ -235,7 +237,7 @@ class TypingGameServer {
 					return;
 				}
 
-				room.room_type = SOCKET_ROOM_TYPES.FINISHED;
+				room.room_status = SOCKET_ROOM_STATUS.RESULTS;
 			},
 		);
 	}

@@ -10,7 +10,7 @@ export function calculateGrossWPM(
 	timeElapsedInSeconds,
 ) {
 	const minutes = timeElapsedInSeconds / 60;
-	return Math.round(typedEntriesLength / averageWordLength / minutes);
+	return Math.floor(typedEntriesLength / averageWordLength / minutes);
 }
 
 /**
@@ -29,7 +29,7 @@ export function calculateAccuracy(entriesLength, numberOfErrors) {
  * @param {number} base
  */
 export function calculateRate(percentage, base) {
-	return Math.round((percentage / base) * 100);
+	return Math.floor((percentage / base) * 100);
 }
 
 /**
@@ -38,7 +38,7 @@ export function calculateRate(percentage, base) {
  */
 export function calculateAverageWordLength(typedEntry) {
 	const wordsInTypedEntry = typedEntry.split(" ");
-	return Math.round(
+	return Math.floor(
 		wordsInTypedEntry.reduce((acc, word) => {
 			return acc + word.length;
 		}, 0) / wordsInTypedEntry.length,

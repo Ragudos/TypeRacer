@@ -16,7 +16,7 @@ export default function Progress({ maximumValue, currentValue, label }) {
 				aria-valuemax={maximumValue}
 				className="progress__bar"
 				style={{
-					"--_x": `${(currentValue / maximumValue) * 100 - 100}%`,
+					"--_x": `${Math.floor((currentValue / maximumValue) * 100) - 100}%`,
 				}}
 			/>
 		</div>

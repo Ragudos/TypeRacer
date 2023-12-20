@@ -23,6 +23,7 @@ const GameScreen = React.memo(function () {
 	const [errors, setErrors] = React.useState(0);
 
 	const paragraph = roomInfo.paragraph_to_type;
+	const isFinished = paragraph === finishedSentence;
 
 	const didError = React.useMemo(() => {
 		return paragraph.slice(0, finishedSentence.length) !== finishedSentence;
@@ -30,8 +31,9 @@ const GameScreen = React.memo(function () {
 
 	/**
 	 * @param {string} word
+	 * @param {boolean} isFinished
 	 */
-	function processProgress(word) {
+	function processProgress(word, isFinished) {
 		const entriesLength = paragraph.length;
 		const typedEntry = hiddenFinishedSentence + word + " ";
 		const typedEntriesLength = typedEntry.length;
@@ -54,14 +56,15 @@ const GameScreen = React.memo(function () {
 			accuracy,
 		};
 
-		if (paragraph === hiddenFinishedSentence) {
-			socket.emit("send_progress", roomInfo.room_id, userId, result);
+		if (paragraph === typedEntry) {
+			socket.emit("send_progress", roomInfo.room_id, userId, result, isFinished);
 		} else {
 			socket.volatile.emit(
 				"send_progress",
 				roomInfo.room_id,
 				userId,
 				result,
+				isFinished
 			);
 		}
 	}
@@ -76,12 +79,11 @@ const GameScreen = React.memo(function () {
 	 */
 	function onChange(e) {
 		const value = e.target.value;
+		const didBackspace =
+			e.nativeEvent.inputType === "deleteContentBackward";
 
 		setInput(value);
 		setFinishedSentence((prevSentence) => {
-			const didBackspace =
-				e.nativeEvent.inputType === "deleteContentBackward";
-
 			if (didBackspace) {
 				if (
 					prevSentence[prevSentence.length - 1] === " " &&
@@ -101,14 +103,13 @@ const GameScreen = React.memo(function () {
 				finishedSentence.length != paragraph.length - 1 &&
 				paragraph[finishedSentence.length] === " "
 			) {
-				setHiddenFinishedSentence((prevSentence) => {
-					const newValue = prevSentence + value;
-					processProgress(value.trim());
-
-					return newValue;
-				});
+				setHiddenFinishedSentence((prevSentence) => prevSentence + value);
+				processProgress(value.trim(), false);
 				setInput("");
 			}
+		} else if (finishedSentence + (value[value.length - 1 || ""]) === paragraph && !didBackspace) {
+			setInput("");
+			processProgress(value.trim(), true);
 		}
 	}
 
@@ -128,23 +129,28 @@ const GameScreen = React.memo(function () {
 
 	return (
 		<React.Fragment>
-			<div className="game-screen" onClick={focusInput}>
-				<p className="game-screen__text">
-					<Display
-						finishedSentence={finishedSentence}
-						hiddenFinishedSentence={hiddenFinishedSentence}
-						didError={didError}
+			{isFinished && (
+				<p>Waiting for other players to finish...</p>
+			)}
+			{!isFinished && (
+				<div className="game-screen" onClick={focusInput}>
+					<p className="game-screen__text">
+						<Display
+							finishedSentence={finishedSentence}
+							hiddenFinishedSentence={hiddenFinishedSentence}
+							didError={didError}
+						/>
+					</p>
+					<input
+						type="text"
+						ref={inputRef}
+						value={input}
+						onChange={onChange}
+						placeholder="Type here..."
+						autoFocus
 					/>
-				</p>
-				<input
-					type="text"
-					ref={inputRef}
-					value={input}
-					onChange={onChange}
-					placeholder="Type here..."
-					autoFocus
-				/>
-			</div>
+				</div>
+			)}
 		</React.Fragment>
 	);
 });
