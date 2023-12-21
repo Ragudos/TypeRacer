@@ -20,7 +20,7 @@ export function calculateGrossWPM(
  */
 export function calculateAccuracy(entriesLength, numberOfErrors) {
 	const accuracy = (entriesLength - numberOfErrors) / entriesLength;
-	return parseFloat(accuracy.toFixed(4));
+	return round(accuracy, 4);
 }
 
 /**
@@ -45,3 +45,21 @@ export function calculateAverageWordLength(typedEntry) {
 	);
 }
 
+/**
+ * Calculate the normalized value of a given value
+ * @param {number} value
+ * @param {number} maxValue
+ * @param {number} minValue
+ */
+export function calculateNormalizedValue(value, minValue, maxValue) {
+	return round((value - minValue) / (maxValue - minValue), 4);
+}
+
+/**
+ * Round a given value to a given number of decimals
+ * @param {number} value
+ * @param {number} decimals
+ */
+export function round(value, decimals) {
+	return Number(Math.round(value + "e" + decimals) + "e-" + decimals);
+}

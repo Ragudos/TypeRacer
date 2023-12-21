@@ -19,6 +19,8 @@ const CountdownScreen = React.memo(function () {
 
 	return (
 		<div className="countdown__container">
+			The game starts in
+			<br />
 			<div
 				className="countdown"
 				style={{ animationDuration: `${COUNTDOWN_SPEED}ms` }}

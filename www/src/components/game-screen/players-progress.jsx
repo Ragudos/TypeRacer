@@ -1,19 +1,32 @@
 import React from "react";
 import Progress from "../ui/progress";
 import usePlayersProgress from "@/hooks/usePlayersProgress";
+import useUserInfo from "@/hooks/useUserInfo";
+import useRoomInfo from "@/hooks/useRoomInfo";
 
 export const PlayersProgress = React.memo(() => {
+	const { userId } = useUserInfo();
+	const { roomInfo } = useRoomInfo();
 	const playersProgress = usePlayersProgress();
 
 	return (
 		<div className="list-of-progress">
 			{playersProgress.map((playerProgress) => {
+				const didPlayerLeave = !roomInfo.users.some(
+					(user) => user.user_id === playerProgress.user_id,
+				);
+
 				return (
 					<div
 						className="list-of-progress__child"
+						style={didPlayerLeave ? { opacity: 0.5 } : undefined}
 						key={playerProgress.user_id}
 					>
-						<div>{playerProgress.username}</div>
+						<small>
+							{playerProgress.username}{" "}
+							{playerProgress.user_id === userId && "(you)"}{" "}
+							{didPlayerLeave && "(left)"}
+						</small>
 						<Progress
 							maximumValue={100}
 							currentValue={playerProgress.progress}

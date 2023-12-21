@@ -2,13 +2,17 @@
 .countdown__container {
 	min-height: inherit;
 	display: grid;
+	gap: 0.5rem;
 	place-items: center;
-
 	font-size: 1.602rem;
 	font-weight: 700;
+
 }
 
+
 .countdown {
+	font-size: 1.424rem;
+	font-weight: 500;
 	animation-name: countdown;
 	animation-timing-function: ease-in-out;
 	animation-fill-mode: forwards;

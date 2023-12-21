@@ -5,12 +5,18 @@ import "@/styles/game-screen.css";
 import { Display } from "./display";
 import { socket } from "@/lib/socket";
 import useUserInfo from "@/hooks/useUserInfo";
-import { calculateAccuracy, calculateAverageWordLength, calculateGrossWPM, calculateRate } from "@/lib/utils";
+import {
+	calculateAccuracy,
+	calculateAverageWordLength,
+	calculateGrossWPM,
+	calculateRate,
+} from "@/lib/utils";
 import { RACE_TIMER_COUNT } from "@server/consts.mjs";
 import useRaceTime from "@/hooks/useRaceTime";
+import { SOCKET_ROOM_STATUS } from "@server/enums.mjs";
 
 const GameScreen = React.memo(function () {
-	const { roomInfo } = useRoomInfo();
+	const { roomInfo, setRoomInfo } = useRoomInfo();
 	const { userId } = useUserInfo();
 	const time = useRaceTime();
 	// The whole already accepted input without the currently shown input
@@ -35,7 +41,7 @@ const GameScreen = React.memo(function () {
 	 */
 	function processProgress(word, isFinished) {
 		const entriesLength = paragraph.length;
-		const typedEntry = hiddenFinishedSentence + word + " ";
+		const typedEntry = hiddenFinishedSentence + word;
 		const typedEntriesLength = typedEntry.length;
 
 		const progress = calculateRate(typedEntriesLength, entriesLength);
@@ -57,14 +63,20 @@ const GameScreen = React.memo(function () {
 		};
 
 		if (paragraph === typedEntry) {
-			socket.emit("send_progress", roomInfo.room_id, userId, result, isFinished);
+			socket.emit(
+				"send_progress",
+				roomInfo.room_id,
+				userId,
+				result,
+				isFinished,
+			);
 		} else {
 			socket.volatile.emit(
 				"send_progress",
 				roomInfo.room_id,
 				userId,
 				result,
-				isFinished
+				isFinished,
 			);
 		}
 	}
@@ -103,11 +115,16 @@ const GameScreen = React.memo(function () {
 				finishedSentence.length != paragraph.length - 1 &&
 				paragraph[finishedSentence.length] === " "
 			) {
-				setHiddenFinishedSentence((prevSentence) => prevSentence + value);
+				setHiddenFinishedSentence(
+					(prevSentence) => prevSentence + value,
+				);
 				processProgress(value.trim(), false);
 				setInput("");
 			}
-		} else if (finishedSentence + (value[value.length - 1 || ""]) === paragraph && !didBackspace) {
+		} else if (
+			finishedSentence + value[value.length - 1 || ""] === paragraph &&
+			!didBackspace
+		) {
 			setInput("");
 			processProgress(value.trim(), true);
 		}
@@ -127,11 +144,23 @@ const GameScreen = React.memo(function () {
 		}
 	}, [didError]);
 
+	React.useEffect(() => {
+		if (isFinished) {
+			setRoomInfo((prevRoomInfo) => {
+				if (!prevRoomInfo) {
+					return undefined;
+				}
+
+				return {
+					...prevRoomInfo,
+					room_status: SOCKET_ROOM_STATUS.RESULTS,
+				};
+			});
+		}
+	}, [isFinished, setRoomInfo]);
+
 	return (
 		<React.Fragment>
-			{isFinished && (
-				<p>Waiting for other players to finish...</p>
-			)}
 			{!isFinished && (
 				<div className="game-screen" onClick={focusInput}>
 					<p className="game-screen__text">

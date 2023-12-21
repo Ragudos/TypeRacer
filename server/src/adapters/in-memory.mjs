@@ -142,7 +142,12 @@ class InMemoryStore {
 	 * @param {string} avatar
 	 */
 	addUser(user_id, username, avatar) {
-		this.users.set(user_id, { user_id, username, avatar, is_finished: false });
+		this.users.set(user_id, {
+			user_id,
+			username,
+			avatar,
+			is_finished: false,
+		});
 		console.debug(`Added user ${user_id}. Current state: `, this.users);
 	}
 
@@ -372,7 +377,7 @@ class InMemoryStore {
 	 * @param {string} user_id
 	 * @param {string} room_id
 	 */
-	leaveRoom(socket, user_id, room_id) {
+	async leaveRoom(socket, user_id, room_id) {
 		const user = this.getUser(user_id);
 
 		if (!user) {
@@ -418,19 +423,24 @@ class InMemoryStore {
 		) {
 			let timer_id;
 
-			if (room.room_status === SOCKET_ROOM_STATUS.PLAYING) {
-				timer_id = room_id + TIMER_SUFFIXES.GAME;
-			} else if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
-				timer_id = room_id + TIMER_SUFFIXES.COUNTDOWN;
-			}
+			try {
+				if (room.room_status === SOCKET_ROOM_STATUS.PLAYING) {
+					timer_id = room_id + TIMER_SUFFIXES.GAME;
+					room.paragraph_to_type = await generate_sentence();
+				} else if (room.room_status === SOCKET_ROOM_STATUS.COUNTDOWN) {
+					timer_id = room_id + TIMER_SUFFIXES.COUNTDOWN;
+				}
 
-			if (timer_id) {
-				this.getTimer(timer_id)?.stop();
-				this.deleteTimer(timer_id);
-			}
+				if (timer_id) {
+					this.getTimer(timer_id)?.stop();
+					this.deleteTimer(timer_id);
+				}
 
-			room.room_status = SOCKET_ROOM_STATUS.WAITING;
-			this.server.to(room_id).emit("reset_room");
+				room.room_status = SOCKET_ROOM_STATUS.WAITING;
+				this.server
+					.to(room_id)
+					.emit("reset_room", room.paragraph_to_type);
+			} catch (err) {}
 		}
 
 		console.log(

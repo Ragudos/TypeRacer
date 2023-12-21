@@ -15,6 +15,7 @@ import Timer from "./game-screen/timer";
 const PlayersProgress = React.lazy(
 	() => import("./game-screen/players-progress"),
 );
+const ResultsScreen = React.lazy(() => import("./results-screen"));
 
 export default function MainScreen() {
 	const { roomInfo } = useRoomInfo();
@@ -36,8 +37,16 @@ export default function MainScreen() {
 						<div className="main-screen">
 							<Timer />
 							{roomInfo.room_status ===
-								SOCKET_ROOM_STATUS.PLAYING && (
-									<GameScreen />
+								SOCKET_ROOM_STATUS.PLAYING && <GameScreen />}
+							{roomInfo.room_status ===
+								SOCKET_ROOM_STATUS.RESULTS && (
+								<React.Suspense
+									fallback={
+										<Loader textToShow="Loading results..." />
+									}
+								>
+									<ResultsScreen />
+								</React.Suspense>
 							)}
 						</div>
 					</RaceTimerContextProvider>

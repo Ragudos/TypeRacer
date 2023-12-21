@@ -10,6 +10,7 @@ import { SOCKET_ROOM_STATUS } from "@server/enums.mjs";
  *
  * @typedef {Object} RoomInfoContextType
  * @property {RoomInfo | undefined} roomInfo
+ * @property {boolean} isRaceFinished
  * @property {React.Dispatch<React.SetStateAction<RoomInfo | undefined>>} setRoomInfo
  */
 
@@ -20,6 +21,7 @@ export const RoomInfoContext = React.createContext(
 	/** @type {RoomInfoContextType} */ ({
 		roomInfo: undefined,
 		setRoomInfo: () => {},
+		isRaceFinished: false,
 	}),
 );
 
@@ -31,6 +33,7 @@ export const RoomInfoContextProvider = (props) => {
 	 * @type {[RoomInfo | undefined, React.Dispatch<React.SetStateAction<RoomInfo | undefined>>]}
 	 */
 	const [roomInfo, setRoomInfo] = React.useState();
+	const [isRaceFinished, setIsRaceFinished] = React.useState(false);
 
 	/**
 	 * @type {(userInfo: UserInfo) => void}
@@ -103,19 +106,28 @@ export const RoomInfoContextProvider = (props) => {
 		});
 	}, []);
 
-	const resetRoom = React.useCallback(() => {
-		setRoomInfo((prevRoomInfo) => {
-			if (!prevRoomInfo) {
-				return undefined;
-			}
+	const resetRoom = React.useCallback(
+		/**
+		 * @param {string} [newParagraphToType]
+		 */
+		(newParagraphToType) => {
+			setRoomInfo((prevRoomInfo) => {
+				if (!prevRoomInfo) {
+					return undefined;
+				}
 
-			return {
-				...prevRoomInfo,
-				room_status: SOCKET_ROOM_STATUS.WAITING,
-			};
-		});
-		toast("Resetting room since you are the only one left.");
-	}, []);
+				return {
+					...prevRoomInfo,
+					room_status: SOCKET_ROOM_STATUS.WAITING,
+					paragraph_to_type:
+						newParagraphToType || prevRoomInfo.paragraph_to_type,
+				};
+			});
+			setIsRaceFinished(false);
+			toast("Resetting room since you are the only one left.");
+		},
+		[],
+	);
 
 	const gameStarted = React.useCallback(() => {
 		setRoomInfo((prevRoomInfo) => {
@@ -154,7 +166,31 @@ export const RoomInfoContextProvider = (props) => {
 				room_status: SOCKET_ROOM_STATUS.RESULTS,
 			};
 		});
+		setIsRaceFinished(true);
 	}, []);
+
+	const backToLobby = React.useCallback(
+		/**
+		 * @param {string} [newParagraphToType]
+		 */
+		(newParagraphToType) => {
+			setRoomInfo((prevRoomInfo) => {
+				if (!prevRoomInfo) {
+					return undefined;
+				}
+
+				return {
+					...prevRoomInfo,
+					room_status: SOCKET_ROOM_STATUS.WAITING,
+					paragraph_to_type:
+						newParagraphToType || prevRoomInfo.paragraph_to_type,
+				};
+			});
+			setIsRaceFinished(false);
+			toast("Returned to lobby.");
+		},
+		[],
+	);
 
 	React.useEffect(() => {
 		socket.on("max_players_changed", receiveMaxPlayersChanged);
@@ -166,6 +202,7 @@ export const RoomInfoContextProvider = (props) => {
 		socket.on("game_started", gameStarted);
 		socket.on("countdown_finished", countdownFinished);
 		socket.on("race_finished", raceFinished);
+		socket.on("back_to_lobby", backToLobby);
 		return () => {
 			socket.off("max_players_changed", receiveMaxPlayersChanged);
 			socket.off("room_type_changed", receiveRoomTypeChanged);
@@ -176,6 +213,7 @@ export const RoomInfoContextProvider = (props) => {
 			socket.off("game_started", gameStarted);
 			socket.off("countdown_finished", countdownFinished);
 			socket.off("race_finished", raceFinished);
+			socket.off("back_to_lobby", backToLobby);
 		};
 	}, [
 		onUserJoined,
@@ -186,10 +224,13 @@ export const RoomInfoContextProvider = (props) => {
 		gameStarted,
 		countdownFinished,
 		raceFinished,
+		backToLobby,
 	]);
 
 	return (
-		<RoomInfoContext.Provider value={{ roomInfo, setRoomInfo }}>
+		<RoomInfoContext.Provider
+			value={{ roomInfo, setRoomInfo, isRaceFinished }}
+		>
 			{props.children}
 		</RoomInfoContext.Provider>
 	);

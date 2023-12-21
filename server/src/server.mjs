@@ -14,6 +14,7 @@ import {
 	MAX_USERNAME_LENGTH,
 	RACE_TIMER_COUNT,
 } from "./consts.mjs";
+import { generate_sentence } from "./lib/random-sentence.mjs";
 
 /**
  * @template T
@@ -47,6 +48,7 @@ import {
  * @property {(room_id: string, user_id: string, new_max: number, cb: CallbackAcknowledgement<undefined>) => void} change_max_players
  * @property {(room_id: string, user_id: string, cb: CallbackAcknowledgement<undefined>) => void} start_game
  * @property {(room_id: string, user_id: string, progress: import("./adapters/in-memory.mjs").Progress, is_finished: boolean) => void} send_progress
+ * @property {(room_id: string, user_id: string) => void} back_to_lobby
  *
  * @typedef {Object} ServerToClient
  * @property {(error: { name: SocketError; message: string; }) => void} error
@@ -61,11 +63,12 @@ import {
  * @property {(new_max: number) => void} max_players_changed
  * @property {() => void} game_started
  * @property {(current_tick: number) => void} countdown
- * @property {() => void} reset_room
+ * @property {(new_paragraph_to_type?: string | undefined) => void} reset_room
  * @property {() => void} countdown_finished
  * @property {(user_id: string, progress: import("./adapters/in-memory.mjs").Progress) => void} send_user_progress
  * @property {(current_tick: number) => void} race_time_left
  * @property {() => void} race_finished
+ * @property {(new_paragrapgh_to_type?: string | undefined) => void} back_to_lobby
  *
  * @typedef {Object} ClientToServer
  * @property {ClientToServerEventNameToCbMap["create_room"]} create_room
@@ -78,6 +81,7 @@ import {
  * @property {ClientToServerEventNameToCbMap["change_max_players"]} change_max_players
  * @property {ClientToServerEventNameToCbMap["start_game"]} start_game
  * @property {ClientToServerEventNameToCbMap["send_progress"]} send_progress
+ * @property {ClientToServerEventNameToCbMap["back_to_lobby"]} back_to_lobby
  *
  * @typedef {import("socket.io").Socket<ClientToServer, ServerToClient>} Socket
  * @typedef {import("socket.io").Server<ClientToServer, ServerToClient>} Server
@@ -138,14 +142,50 @@ class TypingGameServer {
 			this.onStartGame(socket, room_id, user_id, cb);
 		});
 		socket.on("send_progress", this.onSendProgress.bind(this));
+		socket.on("back_to_lobby", this.onBackToLobby.bind(this));
 		socket.onAny(this.logger.bind(this));
 	}
 
 	/**
-	 * @param {string} room_id
-	 * @param {string} user_id
-	 * @param {import("./adapters/in-memory.mjs").Progress} progress
-	 * @param {boolean} is_finished
+	 * @type {ClientToServerEventNameToCbMap["back_to_lobby"]}
+	 */
+	async onBackToLobby(room_id, user_id) {
+		const room = this.store.getRoom(room_id);
+
+		if (!room) {
+			console.error(
+				`Room with id ${room_id} not found in store when a user went back to lobby.`,
+			);
+			return;
+		}
+
+		const user = room.users.find((user) => user.user_id === user_id);
+
+		if (!user) {
+			console.error(
+				`User with id ${user_id} not found in room with id ${room_id} when a user went back to lobby.`,
+			);
+			return;
+		}
+
+		for (const user of room.users) {
+			user.is_finished = false;
+		}
+
+		room.room_status = SOCKET_ROOM_STATUS.WAITING;
+
+		try {
+			room.paragraph_to_type = await generate_sentence();
+			this.server
+				.to(room_id)
+				.emit("back_to_lobby", room.paragraph_to_type);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	/**
+	 * @type {ClientToServerEventNameToCbMap["send_progress"]}
 	 */
 	onSendProgress(room_id, user_id, progress, is_finished) {
 		this.server.to(room_id).emit("send_user_progress", user_id, progress);
@@ -174,11 +214,13 @@ class TypingGameServer {
 
 		user.is_finished = true;
 
-		const is_everyone_finished = room.users.every((user) => user.is_finished);
+		const is_everyone_finished = room.users.every(
+			(user) => user.is_finished,
+		);
 
 		if (is_everyone_finished) {
 			this.server.to(room_id).emit("race_finished");
-			
+
 			const timer_id = room_id + TIMER_SUFFIXES.GAME;
 
 			this.store.getTimer(timer_id)?.stop();

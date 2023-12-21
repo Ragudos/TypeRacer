@@ -19,7 +19,7 @@
 	}
 }
 
-@media only screen and (min-width: 1536px) {
+@media only screen and (min-width: 1280px) {
 	.game-grid {
 		grid-template-columns: 25% 2fr 1fr;
 		grid-template-areas:
@@ -38,7 +38,7 @@
 }
 
 .game-grid > * {
-	max-width: calc(100vw - var(--padding-inline) * 4);
+	width: 100%;
 	border-radius: var(--radius);
 	padding: 0.5rem;
 	background-color: hsl(var(--background));
@@ -116,8 +116,7 @@
 
 .list-of-progress {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 1rem;
+	column-gap: 1rem;
 }
 
 .list-of-progress__child > small {
@@ -125,5 +124,21 @@
 	gap: 0.5rem;
 	margin-top: 0.5rem;
 	color: hsl(var(--accent));
+}
+
+@media only screen and (min-width: 480px) {
+	.list-of-progress {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media only screen and (min-width: 1280px) {
+	.list-of-progress {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.race-timer {
+	margin-bottom: 0.75rem;
 }
 

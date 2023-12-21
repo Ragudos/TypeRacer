@@ -1,0 +1,21 @@
+.results-screen {
+	margin-block: 1rem;
+}
+
+table {
+	--_radius: calc(var(--radius) - 4px);
+}
+
+caption {
+	border-top-left-radius: var(--_radius);
+	border-top-right-radius: var(--_radius);
+}
+
+tr:last-child td:first-child {
+	border-bottom-left-radius: var(--_radius);
+}
+
+tr:last-child td:last-child {
+	border-bottom-right-radius: var(--_radius);
+}
+

@@ -38,5 +38,5 @@
 	"the {{ noun }} {{ adverb }} {{ verb }}",
 	"they said {{ a_noun }} was {{ an_adjective }} {{ noun }}",
 	"once, my master told me, \"how about telling {{ noun }} that they look like {{ an_adjective }} {{ noun }}?\"",
-	"one time, my friends told me, \"how about saying {{ noun }} that they look like {{ an_adverb }} {{ adjective }} {{ noun }}?\""
+	"one time, my friends told me, \"how about saying that {{ noun }} looks like {{ an_adverb }} {{ adjective }} {{ noun }}?\""
 ]
