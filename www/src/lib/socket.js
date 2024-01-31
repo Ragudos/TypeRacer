@@ -9,6 +9,6 @@ import socket_io from "socket.io-client";
 /**
  * @type {import("socket.io-client").Socket<ServerToClient, ClientToServer>}
  */
-export const socket = socket_io(import.meta.NODE_ENV === "development" ? "http://localhost:8A080" : "https://typeracer.fly.dev", {
+export const socket = socket_io(import.meta.env.VITE_NODE_ENV === "development" ? "http://localhost:8080" : "https://typeracer.fly.dev", {
 	autoConnect: false,
 });

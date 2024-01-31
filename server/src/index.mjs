@@ -14,7 +14,7 @@ const port = process.env.PORT || "8080";
 const websocket_server = new Server({
 	cors: {
 		methods: ["GET", "POST"],
-		origin: "https://aaron-typeracer.netlify.app"
+		origin: process.env.NODE_ENV === "development" ? "http://localhost:5173" : "https://aaron-typeracer.netlify.app"
 	},
 });
 
