@@ -22,6 +22,9 @@ const verb_inflector = new natural.PresentVerbInflector();
  * @type {{ [key: string]: (...args: T[]) => void}}
  */
 const actions = {
+	noun_organization: function() {
+		return randy.choice(oragnization_nouns);
+	},
 	a_noun_actors: function() {
 		return articles.articlize(randy.choice(actor_nouns));
 	},
