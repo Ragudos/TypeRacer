@@ -1,5 +1,3 @@
-// @ts-check
-
 import { Timer } from "../Timer.mjs";
 import { COUNTDOWN_SPEED } from "../consts.mjs";
 import {
@@ -89,10 +87,12 @@ class InMemoryStore {
 
 		this.timers.set(id, timer);
 		timer.start();
-		console.debug(
-			`Started countdown in room ${room_id}. Current state: `,
-			this.timers,
-		);
+		if (process.env.NODE_ENV === "development") {
+			console.debug(
+				`Started countdown in room ${room_id}. Current state: `,
+				this.timers,
+			);
+		}
 	}
 
 	/**
@@ -128,10 +128,12 @@ class InMemoryStore {
 			chats.shift();
 		}
 
-		console.debug(
-			`Added chat in room ${room_id}. Current state: `,
-			this.chats,
-		);
+		if (process.env.NODE_ENV === "development") {
+			console.debug(
+				`Added chat in room ${room_id}. Current state: `,
+				this.chats,
+			);
+		}
 
 		return chat;
 	}
@@ -148,7 +150,10 @@ class InMemoryStore {
 			avatar,
 			is_finished: false,
 		});
-		console.debug(`Added user ${user_id}. Current state: `, this.users);
+
+		if (process.env.NODE_ENV === "development") {
+			console.debug(`Added user ${user_id}. Current state: `, this.users);
+		}
 	}
 
 	/**
@@ -208,7 +213,10 @@ class InMemoryStore {
 	 */
 	deleteTimer(timer_id) {
 		this.timers.delete(timer_id);
-		console.log(`Deleted timer ${timer_id}. Current state: `, this.timers);
+
+		if (process.env.NODE_ENV === "development") {
+			console.log(`Deleted timer ${timer_id}. Current state: `, this.timers);
+		}
 	}
 
 	/**
@@ -216,10 +224,10 @@ class InMemoryStore {
 	 */
 	deleteChat(chat_id) {
 		this.chats.delete(chat_id);
-		console.log(
-			`Deleted chat data in room ${chat_id}. Current state: `,
-			this.chats,
-		);
+
+		if (process.env.NODE_ENV === "development") {
+			console.log(`Deleted chat ${chat_id}. Current state: `, this.chats);
+		}
 	}
 
 	/**
@@ -227,7 +235,10 @@ class InMemoryStore {
 	 */
 	deleteRoom(room_id) {
 		this.rooms.delete(room_id);
-		console.log(`Deleted room ${room_id}. Current state: `, this.rooms);
+
+		if (process.env.NODE_ENV === "development") {
+			console.log(`Deleted room ${room_id}. Current state: `, this.rooms);
+		}
 	}
 
 	/**
@@ -235,7 +246,10 @@ class InMemoryStore {
 	 */
 	deleteUser(user_id) {
 		this.users.delete(user_id);
-		console.log(`Deleted user ${user_id}. Current state: `, this.users);
+
+		if (process.env.NODE_ENV === "development") {
+			console.log(`Deleted user ${user_id}. Current state: `, this.users);
+		}
 	}
 
 	/**
@@ -258,10 +272,12 @@ class InMemoryStore {
 						return;
 					}
 
-					console.log(
-						`User ${user_id} created room ${room.room_id}. Current state: `,
-						this.rooms,
-					);
+					if (process.env.NODE_ENV === "development") {
+						console.log(
+							`User ${user_id} created room ${room.room_id}. Current state: `,
+							this.rooms,
+						);
+					}
 
 					cb(
 						200,
@@ -291,10 +307,13 @@ class InMemoryStore {
 			this.server.to(room.room_id).emit("user_joined", user);
 			socket.join(room.room_id);
 			cb(200, room, "Successfully joined room.");
-			console.log(
-				`User ${user_id} joined room ${room.room_id}. Current state: `,
-				this.rooms,
-			);
+
+			if (process.env.NODE_ENV === "development") {
+				console.log(
+					`User ${user_id} joined room ${room.room_id}. Current state: `,
+					this.rooms,
+				);
+			}
 
 			return;
 		}
@@ -305,10 +324,12 @@ class InMemoryStore {
 					return;
 				}
 
-				console.log(
-					`User ${user_id} created room ${room.room_id}. Current state: `,
-					this.rooms,
-				);
+				if (process.env.NODE_ENV === "development") {
+					console.log(
+						`User ${user_id} created room ${room.room_id}. Current state: `,
+						this.rooms,
+					);
+				}
 
 				cb(
 					200,
@@ -443,10 +464,12 @@ class InMemoryStore {
 			} catch (err) {}
 		}
 
-		console.log(
-			`User ${user_id} left room ${room_id}. Current state: `,
-			this.rooms,
-		);
+		if (process.env.NODE_ENV === "development") {
+			console.log(
+				`User ${user_id} left room ${room_id}. Current state: `,
+				this.rooms,
+			);
+		}
 	}
 
 	/**
@@ -463,7 +486,7 @@ class InMemoryStore {
 		const user = this.users.get(host_id);
 
 		if (!user) {
-			console.log("User does not exist despite trying to create a room.");
+			console.error("User does not exist despite trying to create a room.");
 			return;
 		}
 

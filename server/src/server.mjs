@@ -103,9 +103,13 @@ class TypingGameServer {
 	 * @param {Socket} socket
 	 */
 	onConnection(socket) {
+		// @ts-ignore
 		socket.emit("send_user_info", {
+			// @ts-ignore
 			user_id: socket.user_id,
+			// @ts-ignore
 			username: socket.username,
+			// @ts-ignore
 			avatar: socket.avatar,
 		});
 
@@ -113,6 +117,7 @@ class TypingGameServer {
 			this.onError(socket, error);
 		});
 		socket.on("create_room", (cb) => {
+			// @ts-ignore
 			this.onCreateRoom(socket, socket.user_id, cb);
 		});
 		socket.on("join_room", (room_id, cb) => {
@@ -530,6 +535,7 @@ class TypingGameServer {
 	 * @param {string} room_id
 	 */
 	onLeaveRoom(socket, room_id) {
+		// @ts-ignore
 		this.store.leaveRoom(socket, socket.user_id, room_id);
 	}
 
@@ -539,6 +545,7 @@ class TypingGameServer {
 	 * @param {CallbackAcknowledgement<Room | undefined>} cb
 	 */
 	onJoinRoom(socket, room_id, cb) {
+		// @ts-ignore
 		this.store.joinRoom(socket, socket.user_id, room_id, cb);
 	}
 
@@ -555,9 +562,12 @@ class TypingGameServer {
 					return;
 				}
 
-				console.log(
-					`User ${socket.user_id} with a username of ${socket.username} created a room with an id of ${room.room_id}`,
-				);
+				if (process.env.NODE_ENV === "development") {
+					console.log(
+						// @ts-ignore
+						`User ${socket.user_id} with a username of ${socket.username} created a room with an id of ${room.room_id}`,
+					);
+				}
 
 				cb(200, room, "Successfully created room.");
 			})
@@ -572,14 +582,20 @@ class TypingGameServer {
 	 * @param {string} reason
 	 */
 	onDisconnecting(socket, reason) {
-		console.log(
-			`User ${socket.user_id} with a username of ${socket.username} is disconnecting: ${reason}`,
-		);
+		if (process.env.NODE_ENV === "development") {
+			console.log(
+				// @ts-ignore
+				`User ${socket.user_id} with a username of ${socket.username} is disconnecting: ${reason}`,
+			);
+		}
 
+		// @ts-ignore
 		for (const room_id of socket.rooms.values()) {
+			// @ts-ignore
 			this.store.leaveRoom(socket, socket.user_id, room_id);
 		}
 
+		// @ts-ignore
 		this.store.deleteUser(socket.user_id);
 	}
 
@@ -618,9 +634,13 @@ class TypingGameServer {
 		try {
 			const user_id = await genRandomId();
 
+			// @ts-ignore
 			socket.avatar = auth_handshake.avatar;
+			// @ts-ignore
 			socket.username = auth_handshake.username;
+			// @ts-ignore
 			socket.user_id = user_id;
+			// @ts-ignore
 			this.store.addUser(socket.user_id, socket.username, socket.avatar);
 			next();
 		} catch (err) {
