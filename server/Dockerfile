@@ -6,12 +6,11 @@ FROM node:${NODE_VERSION}-slim as base
 
 LABEL fly_launch_runtime="Node.js"
 
+# Node.js app lives here
+WORKDIR /app
+
 # Set production environment
 ENV NODE_ENV="production"
-
-COPY ./ ./
-
-WORKDIR /
 
 # Throw-away build stage to reduce size of final image
 FROM base as build
@@ -31,8 +30,8 @@ COPY --link . .
 FROM base
 
 # Copy built application
-COPY --from=build /dist /dist
+COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "node", "dist/index.cjs" ]
+CMD [ "node", "src/index.mjs" ]
