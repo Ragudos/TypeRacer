@@ -1,4 +1,4 @@
-[
+export const phrases = [
 	"to be more specific,",
 	"in recent years,",
 	"however,",
@@ -18,13 +18,12 @@
 	"extending this logic,",
 	"nowhere is it disputed that",
 	"in modern times",
-	"in ancient times",
 	"recent controversy aside,",
 	"by the way",
 	"of course,",
 	"it's very tricky, if not impossible,",
 	"as far as he is concerned,",
-	"washing and polishing the car,",
+	"while washing and polishing the car,",
 	"having been a gymnast,",
 	"after a long day at school and work,",
 	"waking to the buzz of the alarm clock,",
@@ -37,5 +36,8 @@
 	"before long,",
 	"in the distance,",
 	"searching for perfection,",
-	"the first thing that comes to mind,"
+	"the first thing that comes to mind,",
+	"along the way,",
+	"twice in a millenia,",
+	"in the blink of an eye,",
 ]

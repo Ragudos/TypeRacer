@@ -8,7 +8,7 @@
   "workspaces": [
     "server",
     "www",
-	"tests"
+    "tests"
   ],
   "scripts": {
     "dev": "yarn workspaces foreach --all -pt run dev",

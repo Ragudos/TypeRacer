@@ -1,23 +1,48 @@
-import path from "path";
-import url from "url";
 // @ts-ignore
 import randy from "randy";
 import articles from "articles/lib/Articles.js";
 import natural from "natural";
-import nouns from "../words/nouns.json" assert { type: "json" };
-import verbs from "../words/verbs.json" assert { type: "json" };
-import adjectives from "../words/adjectives.json" assert { type: "json" };
-import adverbs from "../words/adverbs.json" assert { type: "json" };
-import phrases from "../words/phrases.json" assert { type: "json" };
-import templates from "../words/templates.json" assert { type: "json" };
+import nouns from "../words/nouns/singular.mjs";
+import no_plural_nouns from "../words/nouns/no-plural.mjs";
+import actor_nouns from "../words/nouns/actors.mjs";
+import oragnization_nouns from "../words/nouns/organizations.mjs";
+import adjectives from "../words/adjectives/adjectives.mjs";
+import latives from "../words/adjectives/latives.mjs"; 
+import verbs from "../words/verbs/infinitive.mjs";
+import duration from "../words/dates/duration.mjs";
+import { phrases } from "../words/phrases.mjs";
+import { templates } from "../words/templates.mjs";
 
 const noun_inflector = new natural.NounInflector();
+const verb_inflector = new natural.PresentVerbInflector();
+
 
 /**
  * @template T
  * @type {{ [key: string]: (...args: T[]) => void}}
  */
 const actions = {
+	a_noun_actors: function() {
+		return articles.articlize(randy.choice(actor_nouns));
+	},
+	noun_demonyms: function() {
+		return randy.choice(noun_inflector.singularize(randy.choice(actor_nouns)));
+	},
+	adjective_latives: function() {
+		return randy.choice(latives);
+	},
+	noun_organization: function() {
+		return randy.choice(oragnization_nouns);
+	},
+	noun_nonplural: function() {
+		return randy.choice(no_plural_nouns);
+	},
+	noun_actors: function() {
+		return randy.choice(actor_nouns);
+	},
+	date_duration: function() {
+		return randy.choice(duration);
+	},
 	noun: function () {
 		return randy.choice(nouns);
 	},
@@ -27,11 +52,11 @@ const actions = {
 	verb: function () {
 		return randy.choice(verbs);
 	},
+	verbs: function () {
+		return verb_inflector.pluralize(randy.choice(verbs));
+	},
 	adjective: function () {
 		return randy.choice(adjectives);
-	},
-	adverb: function () {
-		return randy.choice(adverbs);
 	},
 	a_noun: function () {
 		return articles.articlize(randy.choice(nouns));
@@ -40,11 +65,14 @@ const actions = {
 		return articles.articlize(randy.choice(adjectives));
 	},
 	a_verb: function () {
-		return articles.articlize(randy.choice(verbs));
+		return articles.articlize(randy.choice(verbs) + "ing");
 	},
-	an_adverb: function () {
-		return articles.articlize(randy.choice(adverbs));
+	verb_past: function () {
+		return randy.choice(verbs) + "ed";
 	},
+	verb_present_participle: function () {
+		return randy.choice(verbs) + "ing";
+	}
 };
 
 /**
