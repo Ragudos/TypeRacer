@@ -8,7 +8,8 @@ import {
 import { generate_sentence } from "../lib/random-sentence.mjs";
 import { genRandomId } from "../lib/utils.mjs";
 
-const MAX_ALLOWED_ROOMS = 1;
+const MAX_ALLOWED_ROOMS = 10;
+const MAX_CHATS_IN_ROOM = 20;
 
 /**
  * @global
@@ -124,7 +125,7 @@ class InMemoryStore {
 
 		chats.push(chat);
 
-		if (chats.length > 10) {
+		if (chats.length > MAX_CHATS_IN_ROOM) {
 			chats.shift();
 		}
 
