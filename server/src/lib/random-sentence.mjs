@@ -88,7 +88,7 @@ export async function random_sentence(string) {
 	// Matches all occurences of {{ ... }} where ... is any character to be replaced. For example {{ noun }} will be replaced with a noun.
 	const occurences = sentence.match(/{{(.+?)}}/g);
 
-	if (!occurences && occurences.length === 0) {
+	if (!occurences && occurences?.length === 0) {
 		return sentence;
 	}
 
